@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { LayoutDashboard, Package, Image, Settings } from "lucide-react"
+import { LayoutDashboard, Package, Image, Settings, ListTodo, Columns3, CalendarDays } from "lucide-react"
 
 type ProjectSidebarProps = {
   projectId: string
@@ -13,6 +13,9 @@ type ProjectSidebarProps = {
 const getNavItems = (projectId: string) => [
   { href: `/projects/${projectId}`, label: "Overview", icon: LayoutDashboard },
   { href: `/projects/${projectId}/parts`, label: "Parts", icon: Package },
+  { href: `/projects/${projectId}/tasks`, label: "Tasks", icon: ListTodo },
+  { href: `/projects/${projectId}/tasks/kanban`, label: "Kanban", icon: Columns3 },
+  { href: `/projects/${projectId}/tasks/calendar`, label: "Calendar", icon: CalendarDays },
   { href: `/projects/${projectId}/media`, label: "Media", icon: Image },
   { href: `/projects/${projectId}/settings`, label: "Settings", icon: Settings },
 ]

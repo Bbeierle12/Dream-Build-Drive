@@ -1,5 +1,6 @@
 import { AppSidebar } from "@/components/layout/app-sidebar"
 import { MobileSidebar } from "@/components/layout/mobile-sidebar"
+import { SearchBar } from "@/components/layout/search-bar"
 import { createClient } from "@/lib/supabase/server"
 
 export default async function DashboardLayout({
@@ -24,6 +25,9 @@ export default async function DashboardLayout({
           <MobileSidebar projects={projects ?? []} />
           <span className="ml-2 text-lg font-bold">DBD</span>
         </header>
+        <div className="hidden md:flex h-12 items-center border-b border-border bg-card/50 px-6">
+          <SearchBar />
+        </div>
         <main className="flex-1 overflow-y-auto p-6">{children}</main>
       </div>
     </div>

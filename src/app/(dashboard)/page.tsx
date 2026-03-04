@@ -13,9 +13,10 @@ export default async function GarageDashboard() {
     .select("*")
     .order("updated_at", { ascending: false })
 
-  const { data: parts } = await supabase
-    .from("parts")
-    .select("project_id, actual_cost, estimated_cost")
+  const [{ data: parts }, { count: totalTasks }] = await Promise.all([
+    supabase.from("parts").select("project_id, actual_cost, estimated_cost"),
+    supabase.from("tasks").select("*", { count: "exact", head: true }),
+  ])
 
   const projectList = (projects ?? []).map((project) => {
     const projectParts = (parts ?? []).filter((p) => p.project_id === project.id)
@@ -57,6 +58,7 @@ export default async function GarageDashboard() {
         totalSpend={totalSpend}
         totalBudget={totalBudget}
         totalParts={totalParts}
+        totalTasks={totalTasks ?? 0}
       />
 
       <div>

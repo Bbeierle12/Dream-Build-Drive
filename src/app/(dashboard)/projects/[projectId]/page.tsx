@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { VehicleInfo } from "@/components/projects/vehicle-info"
 import { CategoryList } from "@/components/categories/category-list"
 import { formatCurrency } from "@/lib/utils"
-import { DollarSign, TrendingUp, Package } from "lucide-react"
+import { DollarSign, TrendingUp, Package, ListTodo } from "lucide-react"
 
 export default async function ProjectOverview({
   params,
@@ -27,14 +27,26 @@ export default async function ProjectOverview({
     .eq("project_id", params.projectId)
     .order("sort_order")
 
-  const { data: parts } = await supabase
-    .from("parts")
-    .select("actual_cost, estimated_cost, status")
-    .eq("project_id", params.projectId)
+  const [{ data: parts }, { data: tasks }] = await Promise.all([
+    supabase
+      .from("parts")
+      .select("actual_cost, estimated_cost, status")
+      .eq("project_id", params.projectId),
+    supabase
+      .from("tasks")
+      .select("status, is_milestone, due_date, title")
+      .eq("project_id", params.projectId),
+  ])
 
   const totalActual = (parts ?? []).reduce((sum, p) => sum + (p.actual_cost ?? 0), 0)
   const totalEstimated = (parts ?? []).reduce((sum, p) => sum + (p.estimated_cost ?? 0), 0)
   const installedCount = (parts ?? []).filter((p) => p.status === "installed").length
+
+  const taskList = tasks ?? []
+  const activeTasks = taskList.filter((t) => t.status !== "done" && t.status !== "backlog").length
+  const nextMilestone = taskList
+    .filter((t) => t.is_milestone && t.status !== "done" && t.due_date)
+    .sort((a, b) => (a.due_date! > b.due_date! ? 1 : -1))[0]
 
   return (
     <div className="space-y-6">
@@ -45,7 +57,7 @@ export default async function ProjectOverview({
         )}
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Budget</CardTitle>
@@ -83,6 +95,19 @@ export default async function ProjectOverview({
             <div className="text-2xl font-bold font-mono">{(parts ?? []).length}</div>
             <p className="text-xs text-muted-foreground">
               {installedCount} installed
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Tasks</CardTitle>
+            <ListTodo className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold font-mono">{taskList.length}</div>
+            <p className="text-xs text-muted-foreground">
+              {activeTasks} active
+              {nextMilestone && ` \u00B7 Next: ${nextMilestone.title}`}
             </p>
           </CardContent>
         </Card>

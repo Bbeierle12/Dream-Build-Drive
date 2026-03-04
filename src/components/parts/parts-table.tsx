@@ -26,8 +26,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { PART_STATUSES } from "@/lib/constants"
-import type { CategoryWithParts, Category, PartStatus } from "@/lib/types"
+import { PART_STATUSES, STATUS_COLORS } from "@/lib/constants"
+import { FilterDropdown } from "@/components/ui/filter-dropdown"
+import { SortHeader } from "@/components/ui/sort-header"
+import type { CategoryWithParts, Category, Part, PartStatus } from "@/lib/types"
+
+type SortDirection = "asc" | "desc" | null
 
 type PartsTableProps = {
   categories: CategoryWithParts[]
@@ -35,10 +39,31 @@ type PartsTableProps = {
   projectId: string
 }
 
+function sortParts(parts: Part[], field: string | null, direction: SortDirection): Part[] {
+  if (!field || !direction) return parts
+  return [...parts].sort((a, b) => {
+    let aVal: string | number | null = null
+    let bVal: string | number | null = null
+    if (field === "name") { aVal = a.name; bVal = b.name }
+    else if (field === "status") { aVal = a.status; bVal = b.status }
+    else if (field === "estimated_cost") { aVal = a.estimated_cost; bVal = b.estimated_cost }
+    else if (field === "actual_cost") { aVal = a.actual_cost; bVal = b.actual_cost }
+    if (aVal == null && bVal == null) return 0
+    if (aVal == null) return 1
+    if (bVal == null) return -1
+    if (aVal < bVal) return direction === "asc" ? -1 : 1
+    if (aVal > bVal) return direction === "asc" ? 1 : -1
+    return 0
+  })
+}
+
 export function PartsTable({ categories, allCategories, projectId }: PartsTableProps) {
   const [expanded, setExpanded] = useState<Set<string>>(
     new Set(categories.map((c) => c.id))
   )
+  const [statusFilter, setStatusFilter] = useState("all")
+  const [sortField, setSortField] = useState<string | null>(null)
+  const [sortDirection, setSortDirection] = useState<SortDirection>(null)
 
   function toggleCategory(id: string) {
     setExpanded((prev) => {
@@ -49,8 +74,29 @@ export function PartsTable({ categories, allCategories, projectId }: PartsTableP
     })
   }
 
+  function handleSort(field: string) {
+    if (sortField === field) {
+      if (sortDirection === "asc") setSortDirection("desc")
+      else if (sortDirection === "desc") { setSortField(null); setSortDirection(null) }
+      else setSortDirection("asc")
+    } else {
+      setSortField(field)
+      setSortDirection("asc")
+    }
+  }
+
+  const statusOptions = PART_STATUSES.map((s) => ({ value: s, label: s }))
+
   return (
     <div className="space-y-2">
+      <div className="flex gap-2 mb-2">
+        <FilterDropdown
+          placeholder="All Statuses"
+          value={statusFilter}
+          options={statusOptions}
+          onChange={setStatusFilter}
+        />
+      </div>
       {categories.map((category) => {
         const isOpen = expanded.has(category.id)
         const costs = computeCategoryCost(category.parts)
@@ -83,12 +129,20 @@ export function PartsTable({ categories, allCategories, projectId }: PartsTableP
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Part</TableHead>
+                      <TableHead>
+                        <SortHeader label="Part" field="name" currentField={sortField} direction={sortDirection} onSort={handleSort} />
+                      </TableHead>
                       <TableHead>Part #</TableHead>
                       <TableHead>Vendor</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Est.</TableHead>
-                      <TableHead className="text-right">Actual</TableHead>
+                      <TableHead>
+                        <SortHeader label="Status" field="status" currentField={sortField} direction={sortDirection} onSort={handleSort} />
+                      </TableHead>
+                      <TableHead className="text-right">
+                        <SortHeader label="Est." field="estimated_cost" currentField={sortField} direction={sortDirection} onSort={handleSort} className="justify-end" />
+                      </TableHead>
+                      <TableHead className="text-right">
+                        <SortHeader label="Actual" field="actual_cost" currentField={sortField} direction={sortDirection} onSort={handleSort} className="justify-end" />
+                      </TableHead>
                       <TableHead className="w-[100px]" />
                     </TableRow>
                   </TableHeader>
@@ -103,7 +157,13 @@ export function PartsTable({ categories, allCategories, projectId }: PartsTableP
                         </TableCell>
                       </TableRow>
                     ) : (
-                      category.parts.map((part) => (
+                      sortParts(
+                        statusFilter === "all"
+                          ? category.parts
+                          : category.parts.filter((p) => p.status === statusFilter),
+                        sortField,
+                        sortDirection
+                      ).map((part) => (
                         <TableRow key={part.id}>
                           <TableCell className="font-medium">
                             {part.name}

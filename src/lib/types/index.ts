@@ -75,3 +75,51 @@ export type CostSummary = {
   planned: number
   overUnder: number
 }
+
+// ── v2: Tasks ──────────────────────────────────────────────
+
+export type TaskStatus =
+  | "backlog"
+  | "todo"
+  | "in_progress"
+  | "in_review"
+  | "done"
+
+export type TaskPriority = "low" | "medium" | "high" | "urgent"
+
+export type Task = {
+  id: string
+  project_id: string
+  category_id: string | null
+  part_id: string | null
+  title: string
+  description: string | null
+  status: TaskStatus
+  priority: TaskPriority
+  start_date: string | null
+  due_date: string | null
+  is_milestone: boolean
+  time_estimate_min: number | null
+  time_actual_min: number | null
+  created_at: string
+  updated_at: string
+}
+
+export type TaskDependency = {
+  task_id: string
+  depends_on_task_id: string
+}
+
+export type TaskWithDependencies = Task & {
+  dependencies: TaskDependency[]
+  blocked_by: TaskDependency[]
+}
+
+export type SearchResult = {
+  type: "task" | "part" | "category" | "attachment"
+  id: string
+  title: string
+  subtitle: string | null
+  project_id: string
+  url: string
+}
