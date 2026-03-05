@@ -32,8 +32,6 @@ function buildMetrics({
         )
       : null
 
-  const avgCost = partCount > 0 ? costs.actual / partCount : 0
-
   return [
     {
       label: "Total Estimated",

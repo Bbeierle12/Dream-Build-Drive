@@ -1,4 +1,4 @@
-import type { Part, Task, Category, Specification, CategoryWithParts } from "@/lib/types"
+import type { Part, Task, Specification, CategoryWithParts } from "@/lib/types"
 import { computeCategoryCost } from "@/lib/utils"
 
 // ── CSV Escaping ────────────────────────────────────────────
