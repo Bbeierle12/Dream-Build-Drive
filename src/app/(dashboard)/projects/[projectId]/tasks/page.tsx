@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server"
 import { notFound } from "next/navigation"
 import { TaskTable } from "@/components/tasks/task-table"
 import { TaskForm } from "@/components/tasks/task-form"
+import { ProjectExportButton } from "@/components/export/project-export-button"
 
 export default async function TasksPage({
   params,
@@ -43,10 +44,13 @@ export default async function TasksPage({
             Manage your build tasks and track progress
           </p>
         </div>
-        <TaskForm
-          projectId={params.projectId}
-          categories={categories ?? []}
-        />
+        <div className="flex items-center gap-2">
+          <ProjectExportButton projectId={params.projectId} />
+          <TaskForm
+            projectId={params.projectId}
+            categories={categories ?? []}
+          />
+        </div>
       </div>
 
       <TaskTable

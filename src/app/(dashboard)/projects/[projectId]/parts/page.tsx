@@ -6,6 +6,7 @@ import { PartsTable } from "@/components/parts/parts-table"
 import { PartForm } from "@/components/parts/part-form"
 import { computeProjectCost } from "@/lib/utils"
 import type { CategoryWithParts } from "@/lib/types"
+import { ProjectExportButton } from "@/components/export/project-export-button"
 
 export default async function PartsPage({
   params,
@@ -53,10 +54,13 @@ export default async function PartsPage({
             Track every part across categories
           </p>
         </div>
-        <PartForm
-          projectId={params.projectId}
-          categories={categories ?? []}
-        />
+        <div className="flex items-center gap-2">
+          <ProjectExportButton projectId={params.projectId} />
+          <PartForm
+            projectId={params.projectId}
+            categories={categories ?? []}
+          />
+        </div>
       </div>
 
       <CostSummaryBar costs={costs} budget={project.budget} />

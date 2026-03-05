@@ -123,3 +123,50 @@ export type SearchResult = {
   project_id: string
   url: string
 }
+
+// ── v3: Specifications ───────────────────────────────────────
+
+export type SpecType = "torque" | "fluid" | "clearance" | "wire_gauge" | "pressure" | "custom"
+
+export type Specification = {
+  id: string
+  project_id: string
+  part_id: string | null
+  category_id: string | null
+  spec_type: SpecType
+  label: string
+  value: string
+  unit: string | null
+  notes: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type SpecTemplate = {
+  id: string
+  vehicle_platform: string
+  spec_type: SpecType
+  category_name: string
+  label: string
+  default_value: string
+  unit: string | null
+}
+
+// ── v3: Analytics ────────────────────────────────────────────
+
+export type CategoryCostData = {
+  name: string
+  estimated: number
+  actual: number
+  partCount: number
+}
+
+export type StatusDistribution = {
+  status: string
+  count: number
+}
+
+export type SpendOverTime = {
+  date: string
+  cumulative: number
+}

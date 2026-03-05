@@ -17,8 +17,8 @@ type ProjectListTableProps = {
 
 export function ProjectListTable({ projects }: ProjectListTableProps) {
   return (
-    <div className="rounded-md border">
-      <Table>
+    <div className="rounded-md border overflow-x-auto -mx-4 sm:mx-0">
+      <Table className="min-w-[500px]">
         <TableHeader>
           <TableRow>
             <TableHead>Project</TableHead>

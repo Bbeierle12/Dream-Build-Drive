@@ -20,7 +20,7 @@ export function StatCards({
   const budgetRemaining = totalBudget - totalSpend
 
   return (
-    <div className={`grid gap-4 md:grid-cols-2 ${totalTasks !== undefined ? "lg:grid-cols-5" : "lg:grid-cols-4"}`}>
+    <div className={`grid grid-cols-2 gap-3 sm:gap-4 ${totalTasks !== undefined ? "lg:grid-cols-5" : "lg:grid-cols-4"}`}>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Active Builds</CardTitle>

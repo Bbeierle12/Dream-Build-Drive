@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { notFound } from "next/navigation"
 import { ProjectSidebar } from "@/components/layout/project-sidebar"
+import { ProjectMobileNav } from "@/components/layout/project-mobile-nav"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 
@@ -22,7 +23,7 @@ export default async function ProjectLayout({
   if (!project) notFound()
 
   return (
-    <div className="flex gap-6">
+    <div className="flex gap-0 lg:gap-6">
       <div className="hidden w-56 shrink-0 lg:block">
         <Link
           href="/"
@@ -33,7 +34,13 @@ export default async function ProjectLayout({
         </Link>
         <ProjectSidebar projectId={project.id} projectName={project.name} />
       </div>
-      <div className="flex-1 min-w-0">{children}</div>
+      <div className="flex-1 min-w-0 pb-20 lg:pb-0">
+        <div className="lg:hidden mb-4">
+          <h2 className="text-lg font-bold truncate">{project.name}</h2>
+        </div>
+        {children}
+      </div>
+      <ProjectMobileNav projectId={project.id} />
     </div>
   )
 }

@@ -26,7 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { PART_STATUSES, STATUS_COLORS } from "@/lib/constants"
+import { PART_STATUSES } from "@/lib/constants"
 import { FilterDropdown } from "@/components/ui/filter-dropdown"
 import { SortHeader } from "@/components/ui/sort-header"
 import type { CategoryWithParts, Category, Part, PartStatus } from "@/lib/types"
@@ -125,8 +125,8 @@ export function PartsTable({ categories, allCategories, projectId }: PartsTableP
                   </span>
                 </button>
               </CollapsibleTrigger>
-              <CollapsibleContent>
-                <Table>
+              <CollapsibleContent className="overflow-x-auto">
+                <Table className="min-w-[600px]">
                   <TableHeader>
                     <TableRow>
                       <TableHead>
@@ -227,18 +227,18 @@ export function PartsTable({ categories, allCategories, projectId }: PartsTableP
                                 categories={allCategories}
                                 part={part}
                                 trigger={
-                                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
-                                    <Pencil className="h-3 w-3" />
+                                  <Button variant="ghost" size="sm" className="h-9 w-9 p-0 min-h-[44px] min-w-[44px]">
+                                    <Pencil className="h-4 w-4" />
                                   </Button>
                                 }
                               />
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="h-7 w-7 p-0 hover:text-destructive"
+                                className="h-9 w-9 p-0 min-h-[44px] min-w-[44px] hover:text-destructive"
                                 onClick={() => deletePart(part.id, projectId)}
                               >
-                                <Trash2 className="h-3 w-3" />
+                                <Trash2 className="h-4 w-4" />
                               </Button>
                             </div>
                           </TableCell>

@@ -5,6 +5,7 @@ import { VehicleInfo } from "@/components/projects/vehicle-info"
 import { CategoryList } from "@/components/categories/category-list"
 import { formatCurrency } from "@/lib/utils"
 import { DollarSign, TrendingUp, Package, ListTodo } from "lucide-react"
+import { ProjectExportButton } from "@/components/export/project-export-button"
 
 export default async function ProjectOverview({
   params,
@@ -50,11 +51,14 @@ export default async function ProjectOverview({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">{project.name}</h1>
-        {project.notes && (
-          <p className="mt-1 text-muted-foreground">{project.notes}</p>
-        )}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">{project.name}</h1>
+          {project.notes && (
+            <p className="mt-1 text-muted-foreground">{project.notes}</p>
+          )}
+        </div>
+        <ProjectExportButton projectId={params.projectId} />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

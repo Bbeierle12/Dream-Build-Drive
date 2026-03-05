@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { LayoutDashboard, Package, Image, Settings, ListTodo, Columns3, CalendarDays } from "lucide-react"
+import { LayoutDashboard, Package, Image, Settings, ListTodo, Columns3, CalendarDays, GanttChart, Wrench, BarChart3 } from "lucide-react"
 
 type ProjectSidebarProps = {
   projectId: string
@@ -16,7 +16,10 @@ const getNavItems = (projectId: string) => [
   { href: `/projects/${projectId}/tasks`, label: "Tasks", icon: ListTodo },
   { href: `/projects/${projectId}/tasks/kanban`, label: "Kanban", icon: Columns3 },
   { href: `/projects/${projectId}/tasks/calendar`, label: "Calendar", icon: CalendarDays },
+  { href: `/projects/${projectId}/tasks/gantt`, label: "Gantt", icon: GanttChart },
   { href: `/projects/${projectId}/media`, label: "Media", icon: Image },
+  { href: `/projects/${projectId}/specs`, label: "Specs", icon: Wrench },
+  { href: `/projects/${projectId}/analytics`, label: "Analytics", icon: BarChart3 },
   { href: `/projects/${projectId}/settings`, label: "Settings", icon: Settings },
 ]
 
@@ -37,7 +40,7 @@ export function ProjectSidebar({ projectId, projectName }: ProjectSidebarProps) 
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors min-h-[44px]",
                 isActive
                   ? "bg-primary/10 text-primary"
                   : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
