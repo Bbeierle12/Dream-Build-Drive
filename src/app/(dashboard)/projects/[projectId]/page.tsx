@@ -1,6 +1,8 @@
 import { createClient } from "@/lib/supabase/server"
 import { notFound } from "next/navigation"
+import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import { VehicleInfo } from "@/components/projects/vehicle-info"
 import { CategoryList } from "@/components/categories/category-list"
 import { formatCurrency } from "@/lib/utils"
@@ -116,6 +118,24 @@ export default async function ProjectOverview({
           </CardContent>
         </Card>
       </div>
+
+      {(parts ?? []).length === 0 && taskList.length === 0 && (
+        <Card>
+          <CardContent className="pt-6 space-y-4">
+            <p className="text-sm text-muted-foreground">
+              This project is empty. Start by adding parts or tasks.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Button asChild size="sm">
+                <Link href={`/projects/${params.projectId}/parts`}>Add Parts</Link>
+              </Button>
+              <Button asChild size="sm" variant="outline">
+                <Link href={`/projects/${params.projectId}/tasks`}>Add Tasks</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <VehicleInfo project={project} />

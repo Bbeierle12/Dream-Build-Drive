@@ -20,6 +20,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Pencil, Trash2, Flag } from "lucide-react"
 import { TASK_STATUSES, TASK_STATUS_LABELS } from "@/lib/constants"
+import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog"
 import { updateTaskStatus, deleteTask } from "@/actions/tasks"
 import { formatTimeEstimate } from "@/lib/task-utils"
 import { TaskForm } from "./task-form"
@@ -46,7 +47,6 @@ export function TaskTable({
   const [statusFilter, setStatusFilter] = useState("all")
   const [priorityFilter, setPriorityFilter] = useState("all")
   const [categoryFilter, setCategoryFilter] = useState("all")
-  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   const blockerMap = new Map<string, string[]>()
   for (const dep of dependencies) {
@@ -72,19 +72,6 @@ export function TaskTable({
     const result = await updateTaskStatus(taskId, projectId, status)
     if (result?.error) {
       toast.error(result.error)
-    }
-  }
-
-  async function handleDelete(taskId: string) {
-    setDeletingId(taskId)
-
-    try {
-      const result = await deleteTask(taskId, projectId)
-      if (result?.error) {
-        toast.error(result.error)
-      }
-    } finally {
-      setDeletingId(null)
     }
   }
 
@@ -182,20 +169,32 @@ export function TaskTable({
                         dependencies={dependencies}
                         task={task}
                         trigger={
-                          <Button variant="ghost" size="icon" className="h-7 w-7">
+                          <Button variant="ghost" size="icon" className="h-7 w-7 min-h-[44px] min-w-[44px]" aria-label={`Edit ${task.title}`}>
                             <Pencil className="h-3.5 w-3.5" />
                           </Button>
                         }
                       />
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-destructive"
-                        disabled={deletingId === task.id}
-                        onClick={() => handleDelete(task.id)}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
+                      <ConfirmDeleteDialog
+                        title={`Delete "${task.title}"?`}
+                        description="This task will be permanently removed."
+                        onConfirm={async () => {
+                          const result = await deleteTask(task.id, projectId)
+                          if (result?.error) {
+                            toast.error(result.error)
+                            throw new Error(result.error)
+                          }
+                        }}
+                        trigger={
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 min-h-[44px] min-w-[44px] text-destructive"
+                            aria-label={`Delete ${task.title}`}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        }
+                      />
                     </div>
                   </TableCell>
                 </TableRow>

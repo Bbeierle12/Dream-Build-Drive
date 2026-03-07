@@ -42,6 +42,7 @@ export function KanbanCard({ task, categoryName, partName, blockerNames }: Kanba
           <button
             {...attributes}
             {...listeners}
+            aria-label="Drag to reorder"
             className="shrink-0 cursor-grab text-muted-foreground hover:text-foreground"
           >
             <GripVertical className="h-4 w-4" />

@@ -104,6 +104,18 @@ Local changes should meet the same bar before merge.
 - Auth callback routing uses `/auth/callback`.
 - Production deploys should apply all migrations before shipping the app build.
 
+## Deployment Checklist
+
+1. Use Node.js 20.x in CI and hosting.
+2. Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` in the hosting environment.
+3. Apply every SQL migration in `supabase/migrations` before deploying the app.
+4. Confirm the `attachments` bucket exists in Supabase Storage.
+5. Add auth redirect URLs for both local and production:
+   - `http://localhost:3000/auth/callback`
+   - `https://your-production-domain/auth/callback`
+6. Run `npm run check` and `npm run build` before release.
+7. Deploy only after the production environment points at the migrated Supabase project.
+
 ## Current Stabilization Baseline
 
 Part one of the stabilization pass focused on:

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { toast } from "sonner"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { createCategory, updateCategory } from "@/actions/categories"
@@ -15,16 +16,27 @@ type CategoryFormProps = {
 
 export function CategoryForm({ projectId, category, onClose }: CategoryFormProps) {
   const [name, setName] = useState(category?.name ?? "")
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   async function handleSubmit() {
-    if (!name.trim()) return
+    if (!name.trim() || isSubmitting) return
 
-    if (category) {
-      await updateCategory(category.id, projectId, name.trim())
-    } else {
-      await createCategory(projectId, name.trim())
+    setIsSubmitting(true)
+
+    try {
+      const result = category
+        ? await updateCategory(category.id, projectId, name.trim())
+        : await createCategory(projectId, name.trim())
+
+      if (result?.error) {
+        toast.error(result.error)
+        return
+      }
+
+      onClose()
+    } finally {
+      setIsSubmitting(false)
     }
-    onClose()
   }
 
   return (
@@ -40,10 +52,22 @@ export function CategoryForm({ projectId, category, onClose }: CategoryFormProps
           if (e.key === "Escape") onClose()
         }}
       />
-      <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={handleSubmit}>
+      <Button
+        size="sm"
+        variant="ghost"
+        className="h-8 w-8 p-0"
+        disabled={isSubmitting}
+        onClick={handleSubmit}
+      >
         <Check className="h-3 w-3" />
       </Button>
-      <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={onClose}>
+      <Button
+        size="sm"
+        variant="ghost"
+        className="h-8 w-8 p-0"
+        disabled={isSubmitting}
+        onClick={onClose}
+      >
         <X className="h-3 w-3" />
       </Button>
     </div>

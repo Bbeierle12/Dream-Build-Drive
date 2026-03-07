@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { toast } from "sonner"
 import {
   Collapsible,
   CollapsibleContent,
@@ -16,6 +17,7 @@ import {
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { PartForm } from "./part-form"
+import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog"
 import { deletePart, updatePartStatus } from "@/actions/parts"
 import { formatCurrency, computeCategoryCost } from "@/lib/utils"
 import { ChevronDown, ChevronRight, Pencil, Trash2, ExternalLink } from "lucide-react"
@@ -64,7 +66,6 @@ export function PartsTable({ categories, allCategories, projectId }: PartsTableP
   const [statusFilter, setStatusFilter] = useState("all")
   const [sortField, setSortField] = useState<string | null>(null)
   const [sortDirection, setSortDirection] = useState<SortDirection>(null)
-
   function toggleCategory(id: string) {
     setExpanded((prev) => {
       const next = new Set(prev)
@@ -82,6 +83,13 @@ export function PartsTable({ categories, allCategories, projectId }: PartsTableP
     } else {
       setSortField(field)
       setSortDirection("asc")
+    }
+  }
+
+  async function handleStatusChange(partId: string, status: PartStatus) {
+    const result = await updatePartStatus(partId, projectId, status)
+    if (result?.error) {
+      toast.error(result.error)
     }
   }
 
@@ -195,7 +203,7 @@ export function PartsTable({ categories, allCategories, projectId }: PartsTableP
                             <Select
                               defaultValue={part.status}
                               onValueChange={(value) =>
-                                updatePartStatus(part.id, projectId, value as PartStatus)
+                                handleStatusChange(part.id, value as PartStatus)
                               }
                             >
                               <SelectTrigger className="h-7 w-[120px]">
@@ -227,19 +235,32 @@ export function PartsTable({ categories, allCategories, projectId }: PartsTableP
                                 categories={allCategories}
                                 part={part}
                                 trigger={
-                                  <Button variant="ghost" size="sm" className="h-9 w-9 p-0 min-h-[44px] min-w-[44px]">
+                                  <Button variant="ghost" size="sm" className="h-9 w-9 p-0 min-h-[44px] min-w-[44px]" aria-label={`Edit ${part.name}`}>
                                     <Pencil className="h-4 w-4" />
                                   </Button>
                                 }
                               />
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-9 w-9 p-0 min-h-[44px] min-w-[44px] hover:text-destructive"
-                                onClick={() => deletePart(part.id, projectId)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+                              <ConfirmDeleteDialog
+                                title={`Delete "${part.name}"?`}
+                                description="This part and its data will be permanently removed."
+                                onConfirm={async () => {
+                                  const result = await deletePart(part.id, projectId)
+                                  if (result?.error) {
+                                    toast.error(result.error)
+                                    throw new Error(result.error)
+                                  }
+                                }}
+                                trigger={
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-9 w-9 p-0 min-h-[44px] min-w-[44px] hover:text-destructive"
+                                    aria-label={`Delete ${part.name}`}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                }
+                              />
                             </div>
                           </TableCell>
                         </TableRow>

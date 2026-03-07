@@ -75,17 +75,25 @@ export function CalendarView({ tasks }: CalendarViewProps) {
       ? `${MONTH_NAMES[month]} ${year}`
       : `Week of ${days[0]?.dateStr ?? ""}`
 
+  if (tasks.length === 0) {
+    return (
+      <div className="rounded-md border p-8 text-center text-muted-foreground">
+        No tasks with dates yet. Add start or due dates to your tasks to see them on the calendar.
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon" onClick={navigatePrev}>
+          <Button variant="outline" size="icon" onClick={navigatePrev} aria-label={view === "month" ? "Previous month" : "Previous week"}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <h2 className="text-lg font-semibold min-w-[200px] text-center">
             {title}
           </h2>
-          <Button variant="outline" size="icon" onClick={navigateNext}>
+          <Button variant="outline" size="icon" onClick={navigateNext} aria-label={view === "month" ? "Next month" : "Next week"}>
             <ChevronRight className="h-4 w-4" />
           </Button>
           <Button variant="ghost" size="sm" onClick={goToToday}>

@@ -6,6 +6,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight, Trash2, X } from "lucide-react"
 import { toast } from "sonner"
+import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog"
 import { deleteAttachment } from "@/actions/attachments"
 import type { AttachmentWithDetails } from "@/lib/types"
 
@@ -18,7 +19,6 @@ type LightboxProps = {
 
 export function Lightbox({ photos, projectId, initialIndex, onClose }: LightboxProps) {
   const [index, setIndex] = useState(initialIndex)
-  const [isDeleting, setIsDeleting] = useState(false)
 
   const prev = useCallback(() => {
     setIndex((i) => (i > 0 ? i - 1 : photos.length - 1))
@@ -40,23 +40,6 @@ export function Lightbox({ photos, projectId, initialIndex, onClose }: LightboxP
 
   const photo = photos[index]
 
-  async function handleDelete() {
-    setIsDeleting(true)
-
-    try {
-      const result = await deleteAttachment(photo.id, photo.storage_path, projectId)
-      if (result?.error) {
-        toast.error(result.error)
-        return
-      }
-
-      toast.success("Photo deleted")
-      onClose()
-    } finally {
-      setIsDeleting(false)
-    }
-  }
-
   return (
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="max-w-4xl p-0 border-0 bg-black/90">
@@ -66,6 +49,7 @@ export function Lightbox({ photos, projectId, initialIndex, onClose }: LightboxP
             size="sm"
             className="absolute left-2 top-1/2 -translate-y-1/2 z-10 text-white hover:bg-white/10"
             onClick={prev}
+            aria-label="Previous photo"
           >
             <ChevronLeft className="h-6 w-6" />
           </Button>
@@ -85,25 +69,41 @@ export function Lightbox({ photos, projectId, initialIndex, onClose }: LightboxP
             size="sm"
             className="absolute right-2 top-1/2 -translate-y-1/2 z-10 text-white hover:bg-white/10"
             onClick={next}
+            aria-label="Next photo"
           >
             <ChevronRight className="h-6 w-6" />
           </Button>
 
-          <Button
-            variant="ghost"
-            size="sm"
-            className="absolute right-12 top-2 z-10 text-white hover:bg-white/10"
-            disabled={isDeleting}
-            onClick={handleDelete}
-          >
-            <Trash2 className="h-5 w-5" />
-          </Button>
+          <ConfirmDeleteDialog
+            title="Delete this photo?"
+            description="This photo will be permanently removed from the project."
+            onConfirm={async () => {
+              const result = await deleteAttachment(photo.id, photo.storage_path, projectId)
+              if (result?.error) {
+                toast.error(result.error)
+                throw new Error(result.error)
+              }
+              toast.success("Photo deleted")
+              onClose()
+            }}
+            trigger={
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute right-12 top-2 z-10 text-white hover:bg-white/10"
+                aria-label="Delete photo"
+              >
+                <Trash2 className="h-5 w-5" />
+              </Button>
+            }
+          />
 
           <Button
             variant="ghost"
             size="sm"
             className="absolute right-2 top-2 z-10 text-white hover:bg-white/10"
             onClick={onClose}
+            aria-label="Close"
           >
             <X className="h-5 w-5" />
           </Button>

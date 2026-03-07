@@ -1,8 +1,10 @@
 "use client"
 
 import { useState } from "react"
+import { toast } from "sonner"
 import { Pencil, Trash2, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog"
 import { deleteCategory } from "@/actions/categories"
 import { CategoryForm } from "./category-form"
 import type { Category } from "@/lib/types"
@@ -24,6 +26,7 @@ export function CategoryList({ categories, projectId }: CategoryListProps) {
           variant="ghost"
           size="sm"
           onClick={() => setShowAdd(true)}
+          aria-label="Add category"
         >
           <Plus className="h-4 w-4" />
         </Button>
@@ -52,15 +55,26 @@ export function CategoryList({ categories, projectId }: CategoryListProps) {
                   <button
                     onClick={() => setEditingId(category.id)}
                     className="p-1 text-muted-foreground hover:text-foreground"
+                    aria-label={`Edit ${category.name}`}
                   >
                     <Pencil className="h-3 w-3" />
                   </button>
-                  <button
-                    onClick={() => deleteCategory(category.id, projectId)}
-                    className="p-1 text-muted-foreground hover:text-destructive"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </button>
+                  <ConfirmDeleteDialog
+                    title={`Delete "${category.name}"?`}
+                    description="This category and all its parts will be permanently removed."
+                    onConfirm={async () => {
+                      const result = await deleteCategory(category.id, projectId)
+                      if (result?.error) {
+                        toast.error(result.error)
+                        throw new Error(result.error)
+                      }
+                    }}
+                    trigger={
+                      <button className="p-1 text-muted-foreground hover:text-destructive" aria-label={`Delete ${category.name}`}>
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    }
+                  />
                 </div>
               </div>
             )}

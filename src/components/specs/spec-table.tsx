@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { SpecForm } from "./spec-form"
 import { SpecTypeBadge } from "./spec-type-badge"
+import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog"
 import { deleteSpecification } from "@/actions/specs"
 import { FilterDropdown } from "@/components/ui/filter-dropdown"
 import { Pencil, Trash2 } from "lucide-react"
@@ -64,7 +65,6 @@ export function SpecTable({
 }: SpecTableProps) {
   const [typeFilter, setTypeFilter] = useState("all")
   const [groupMode, setGroupMode] = useState<GroupMode>("category")
-  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   const typeOptions = SPEC_TYPES.map((t) => ({
     value: t,
@@ -79,19 +79,6 @@ export function SpecTable({
   const grouped = groupSpecs(filtered, groupMode, categories)
   const partMap = new Map(parts.map((p) => [p.id, p.name]))
   const categoryMap = new Map(categories.map((c) => [c.id, c.name]))
-
-  async function handleDelete(specId: string) {
-    setDeletingId(specId)
-
-    try {
-      const result = await deleteSpecification(specId, projectId)
-      if (result?.error) {
-        toast.error(result.error)
-      }
-    } finally {
-      setDeletingId(null)
-    }
-  }
 
   return (
     <div className="space-y-4">
@@ -189,21 +176,34 @@ export function SpecTable({
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-7 w-7 p-0"
+                              className="h-7 w-7 p-0 min-h-[44px] min-w-[44px]"
+                              aria-label={`Edit ${spec.label}`}
                             >
                               <Pencil className="h-3 w-3" />
                             </Button>
                           }
                         />
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 w-7 p-0 hover:text-destructive"
-                          disabled={deletingId === spec.id}
-                          onClick={() => handleDelete(spec.id)}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
+                        <ConfirmDeleteDialog
+                          title={`Delete "${spec.label}"?`}
+                          description="This specification will be permanently removed."
+                          onConfirm={async () => {
+                            const result = await deleteSpecification(spec.id, projectId)
+                            if (result?.error) {
+                              toast.error(result.error)
+                              throw new Error(result.error)
+                            }
+                          }}
+                          trigger={
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 w-7 p-0 min-h-[44px] min-w-[44px] hover:text-destructive"
+                              aria-label={`Delete ${spec.label}`}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          }
+                        />
                       </div>
                     </TableCell>
                   </TableRow>

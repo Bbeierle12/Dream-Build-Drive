@@ -2,6 +2,9 @@
   "name": "dream-build-drive",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "clean": "node -e \"const fs=require('fs'); for (const p of ['.next','tsconfig.tsbuildinfo']) fs.rmSync(p,{ recursive: true, force: true });\"",
     "dev": "next dev",

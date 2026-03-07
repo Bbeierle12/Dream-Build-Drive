@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { Download, FileSpreadsheet, Printer, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -27,20 +27,72 @@ import {
   downloadCSV,
 } from "@/lib/export-utils"
 import { PrintReport } from "./print-report"
+import { reportError } from "@/lib/error-reporting"
 
 type Props = {
   projectId: string
 }
 
+type PrintData = {
+  project: Awaited<ReturnType<typeof getExportProjectInfo>>
+  categories: Awaited<ReturnType<typeof getExportCostReport>>
+  tasks: Awaited<ReturnType<typeof getExportTasks>>
+  specs: Awaited<ReturnType<typeof getExportSpecs>>
+}
+
+function slugifyProjectName(name: string): string {
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "project"
+}
+
+function buildExportFilename(projectName: string, suffix: string): string {
+  const date = new Date().toISOString().slice(0, 10)
+  return `${slugifyProjectName(projectName)}-${suffix}-${date}.csv`
+}
+
+function hasPrintableContent({
+  project,
+  categories,
+  tasks,
+  specs,
+}: PrintData): boolean {
+  const hasCategoryData = categories.length > 0
+  const hasParts = categories.some((category) => category.parts.length > 0)
+  const hasVehicleDetails = Boolean(
+    project.year ||
+      project.make ||
+      project.model ||
+      project.trim ||
+      project.vin ||
+      project.color
+  )
+
+  return (
+    hasCategoryData ||
+    hasParts ||
+    tasks.length > 0 ||
+    specs.length > 0 ||
+    project.budget != null ||
+    Boolean(project.notes) ||
+    hasVehicleDetails
+  )
+}
+
 export function ExportMenu({ projectId }: Props) {
   const [loading, setLoading] = useState<string | null>(null)
-  const [printData, setPrintData] = useState<{
-    project: Awaited<ReturnType<typeof getExportProjectInfo>>
-    categories: Awaited<ReturnType<typeof getExportCostReport>>
-    tasks: Awaited<ReturnType<typeof getExportTasks>>
-    specs: Awaited<ReturnType<typeof getExportSpecs>>
-  } | null>(null)
-  const printRef = useRef<HTMLDivElement>(null)
+  const [printData, setPrintData] = useState<PrintData | null>(null)
+
+  useEffect(() => {
+    function handleAfterPrint() {
+      setPrintData(null)
+    }
+
+    window.addEventListener("afterprint", handleAfterPrint)
+    return () => window.removeEventListener("afterprint", handleAfterPrint)
+  }, [])
 
   const handleExport = useCallback(
     async (type: string) => {
@@ -48,23 +100,71 @@ export function ExportMenu({ projectId }: Props) {
       try {
         switch (type) {
           case "parts": {
-            const parts = await getExportParts(projectId)
-            downloadCSV(partsToCSV(parts), "parts-export.csv")
+            const [project, parts] = await Promise.all([
+              getExportProjectInfo(projectId),
+              getExportParts(projectId),
+            ])
+
+            if (parts.length === 0) {
+              toast.error("No parts to export yet")
+              return
+            }
+
+            downloadCSV(
+              partsToCSV(parts),
+              buildExportFilename(project.name, "parts")
+            )
             break
           }
           case "tasks": {
-            const tasks = await getExportTasks(projectId)
-            downloadCSV(tasksToCSV(tasks), "tasks-export.csv")
+            const [project, tasks] = await Promise.all([
+              getExportProjectInfo(projectId),
+              getExportTasks(projectId),
+            ])
+
+            if (tasks.length === 0) {
+              toast.error("No tasks to export yet")
+              return
+            }
+
+            downloadCSV(
+              tasksToCSV(tasks),
+              buildExportFilename(project.name, "tasks")
+            )
             break
           }
           case "specs": {
-            const specs = await getExportSpecs(projectId)
-            downloadCSV(specsToCSV(specs), "specs-export.csv")
+            const [project, specs] = await Promise.all([
+              getExportProjectInfo(projectId),
+              getExportSpecs(projectId),
+            ])
+
+            if (specs.length === 0) {
+              toast.error("No specifications to export yet")
+              return
+            }
+
+            downloadCSV(
+              specsToCSV(specs),
+              buildExportFilename(project.name, "specs")
+            )
             break
           }
           case "cost": {
-            const categories = await getExportCostReport(projectId)
-            downloadCSV(costSummaryToCSV(categories), "cost-report.csv")
+            const [project, categories] = await Promise.all([
+              getExportProjectInfo(projectId),
+              getExportCostReport(projectId),
+            ])
+
+            if (categories.length === 0) {
+              toast.error("No categories to export yet")
+              return
+            }
+
+            downloadCSV(
+              costSummaryToCSV(categories),
+              buildExportFilename(project.name, "cost-report")
+            )
             break
           }
           case "print": {
@@ -74,6 +174,12 @@ export function ExportMenu({ projectId }: Props) {
               getExportTasks(projectId),
               getExportSpecs(projectId),
             ])
+
+            if (!hasPrintableContent({ project, categories, tasks, specs })) {
+              toast.error("Nothing to print yet")
+              return
+            }
+
             setPrintData({ project, categories, tasks, specs })
             // Wait for React to render the print component
             setTimeout(() => window.print(), 100)
@@ -81,7 +187,7 @@ export function ExportMenu({ projectId }: Props) {
           }
         }
       } catch (err) {
-        console.error("Export failed:", err)
+        reportError(err, { action: `export.${type}`, projectId })
         toast.error(
           err instanceof Error ? err.message : "Export failed"
         )
@@ -136,7 +242,6 @@ export function ExportMenu({ projectId }: Props) {
 
       {printData && (
         <PrintReport
-          ref={printRef}
           project={printData.project}
           categories={printData.categories}
           tasks={printData.tasks}

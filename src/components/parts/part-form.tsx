@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { toast } from "sonner"
 import {
   Dialog,
   DialogContent,
@@ -40,15 +41,25 @@ export function PartForm({
   trigger,
 }: PartFormProps) {
   const [open, setOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   async function handleSubmit(formData: FormData) {
-    if (part) {
-      await updatePart(part.id, projectId, formData)
-    } else {
-      const categoryId = formData.get("category_id") as string
-      await createPart(projectId, categoryId, formData)
+    setIsSubmitting(true)
+
+    try {
+      const result = part
+        ? await updatePart(part.id, projectId, formData)
+        : await createPart(projectId, formData.get("category_id") as string, formData)
+
+      if (result?.error) {
+        toast.error(result.error)
+        return
+      }
+
+      setOpen(false)
+    } finally {
+      setIsSubmitting(false)
     }
-    setOpen(false)
   }
 
   return (
@@ -183,7 +194,7 @@ export function PartForm({
             />
           </div>
 
-          <Button type="submit" className="w-full">
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
             {part ? "Save Changes" : "Add Part"}
           </Button>
         </form>

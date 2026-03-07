@@ -75,7 +75,11 @@ export async function updatePart(
 export async function deletePart(partId: string, projectId: string) {
   const supabase = createClient()
 
-  await supabase.from("parts").delete().eq("id", partId)
+  const { error } = await supabase.from("parts").delete().eq("id", partId)
+
+  if (error) {
+    return { error: error.message }
+  }
 
   revalidatePath(`/projects/${projectId}/parts`)
   revalidatePath(`/projects/${projectId}`)
@@ -89,7 +93,11 @@ export async function updatePartStatus(
 ) {
   const supabase = createClient()
 
-  await supabase.from("parts").update({ status }).eq("id", partId)
+  const { error } = await supabase.from("parts").update({ status }).eq("id", partId)
+
+  if (error) {
+    return { error: error.message }
+  }
 
   revalidatePath(`/projects/${projectId}/parts`)
   revalidatePath(`/projects/${projectId}`)

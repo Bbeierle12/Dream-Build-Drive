@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import { notFound } from "next/navigation"
+import Link from "next/link"
 import { computeProjectCost } from "@/lib/utils"
 import {
   computeCategoryCostData,
@@ -12,6 +13,8 @@ import { CostByCategoryChart } from "@/components/analytics/cost-by-category-cha
 import { BudgetGauge } from "@/components/analytics/budget-gauge"
 import { StatusPieChart } from "@/components/analytics/status-pie-chart"
 import { TaskCompletionChart } from "@/components/analytics/task-completion-chart"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { CategoryWithParts } from "@/lib/types"
 
 export default async function AnalyticsPage({
@@ -47,9 +50,23 @@ export default async function AnalyticsPage({
       .order("created_at"),
   ])
 
+  if (categoriesRes.error) {
+    throw new Error(categoriesRes.error.message)
+  }
+
+  if (partsRes.error) {
+    throw new Error(partsRes.error.message)
+  }
+
+  if (tasksRes.error) {
+    throw new Error(tasksRes.error.message)
+  }
+
   const categories = categoriesRes.data ?? []
   const parts = partsRes.data ?? []
   const tasks = tasksRes.data ?? []
+  const hasAnalyticsData =
+    categories.length > 0 || parts.length > 0 || tasks.length > 0 || project.budget != null
 
   const categoriesWithParts: CategoryWithParts[] = categories.map((cat) => ({
     ...cat,
@@ -70,6 +87,30 @@ export default async function AnalyticsPage({
           Cost breakdown, budget health, and progress at a glance
         </p>
       </div>
+
+      {!hasAnalyticsData && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Nothing to chart yet</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Analytics will populate after you add a budget, parts, or tasks.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Button asChild size="sm">
+                <Link href={`/projects/${params.projectId}/parts`}>Add Parts</Link>
+              </Button>
+              <Button asChild size="sm" variant="outline">
+                <Link href={`/projects/${params.projectId}/tasks`}>Add Tasks</Link>
+              </Button>
+              <Button asChild size="sm" variant="outline">
+                <Link href={`/projects/${params.projectId}/settings`}>Set Budget</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <SpendSummaryCards
         costs={costs}

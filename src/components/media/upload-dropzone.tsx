@@ -6,6 +6,7 @@ import { createSignedUploadUrl, createAttachment } from "@/actions/attachments"
 import { createClient } from "@/lib/supabase/client"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
+import { reportError } from "@/lib/error-reporting"
 import {
   Select,
   SelectContent,
@@ -75,7 +76,8 @@ export function UploadDropzone({ projectId, categories, parts }: UploadDropzoneP
 
           completed++
           setProgress(Math.round((completed / fileArray.length) * 100))
-        } catch {
+        } catch (err) {
+          reportError(err, { action: "media.upload", projectId, meta: { fileName: file.name } })
           toast.error(`Failed to upload ${file.name}`)
         }
       }

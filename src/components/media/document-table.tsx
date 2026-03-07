@@ -1,6 +1,5 @@
 "use client"
 
-import { useState } from "react"
 import {
   Table,
   TableBody,
@@ -11,6 +10,7 @@ import {
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Download, Trash2, FileText } from "lucide-react"
+import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog"
 import { deleteAttachment } from "@/actions/attachments"
 import { toast } from "sonner"
 import type { AttachmentWithDetails } from "@/lib/types"
@@ -27,21 +27,6 @@ function formatFileSize(bytes: number): string {
 }
 
 export function DocumentTable({ documents, projectId }: DocumentTableProps) {
-  const [deletingId, setDeletingId] = useState<string | null>(null)
-
-  async function handleDelete(doc: AttachmentWithDetails) {
-    setDeletingId(doc.id)
-
-    try {
-      const result = await deleteAttachment(doc.id, doc.storage_path, projectId)
-      if (result?.error) {
-        toast.error(result.error)
-      }
-    } finally {
-      setDeletingId(null)
-    }
-  }
-
   if (documents.length === 0) {
     return (
       <p className="py-8 text-center text-sm text-muted-foreground">
@@ -87,19 +72,31 @@ export function DocumentTable({ documents, projectId }: DocumentTableProps) {
               <TableCell>
                 <div className="flex justify-end gap-1">
                   <a href={doc.url} target="_blank" rel="noopener noreferrer">
-                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0" aria-label={`Download ${doc.file_name}`}>
                       <Download className="h-3 w-3" />
                     </Button>
                   </a>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 w-7 p-0 hover:text-destructive"
-                    disabled={deletingId === doc.id}
-                    onClick={() => handleDelete(doc)}
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
+                  <ConfirmDeleteDialog
+                    title={`Delete "${doc.file_name}"?`}
+                    description="This document will be permanently removed from the project."
+                    onConfirm={async () => {
+                      const result = await deleteAttachment(doc.id, doc.storage_path, projectId)
+                      if (result?.error) {
+                        toast.error(result.error)
+                        throw new Error(result.error)
+                      }
+                    }}
+                    trigger={
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0 hover:text-destructive"
+                        aria-label={`Delete ${doc.file_name}`}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    }
+                  />
                 </div>
               </TableCell>
             </TableRow>

@@ -29,6 +29,7 @@ export function PhotoGrid({ photos, projectId }: PhotoGridProps) {
             key={photo.id}
             id={`attachment-${photo.id}`}
             onClick={() => setSelectedIndex(index)}
+            aria-label={`View ${photo.file_name}`}
             className="deeplink-target group relative aspect-square overflow-hidden rounded-md border border-border"
           >
             <Image

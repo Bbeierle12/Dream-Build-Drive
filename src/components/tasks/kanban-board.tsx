@@ -121,6 +121,14 @@ export function KanbanBoard({
     }
   }
 
+  if (tasks.length === 0) {
+    return (
+      <div className="rounded-md border p-8 text-center text-muted-foreground">
+        No tasks yet. Create a task to start using the kanban board.
+      </div>
+    )
+  }
+
   return (
     <DndContext
       sensors={sensors}

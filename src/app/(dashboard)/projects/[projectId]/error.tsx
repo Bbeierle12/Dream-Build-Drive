@@ -1,6 +1,8 @@
 "use client"
 
+import { useEffect } from "react"
 import { Button } from "@/components/ui/button"
+import { reportError } from "@/lib/error-reporting"
 
 export default function ProjectError({
   error,
@@ -9,6 +11,10 @@ export default function ProjectError({
   error: Error & { digest?: string }
   reset: () => void
 }) {
+  useEffect(() => {
+    reportError(error, { action: "project.render", meta: { digest: error.digest } })
+  }, [error])
+
   return (
     <div className="flex flex-col items-center justify-center py-16">
       <h2 className="text-xl font-semibold">Failed to load project</h2>
