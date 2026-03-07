@@ -26,12 +26,13 @@ import { TaskForm } from "./task-form"
 import { PriorityBadge } from "./priority-badge"
 import { BlockerWarning } from "./blocker-warning"
 import { TaskFilters } from "./task-filters"
-import type { Task, TaskDependency, Category, TaskStatus } from "@/lib/types"
+import type { Task, TaskDependency, Category, TaskStatus, Part } from "@/lib/types"
 
 type TaskTableProps = {
   tasks: Task[]
   dependencies: TaskDependency[]
   categories: Category[]
+  parts: Part[]
   projectId: string
 }
 
@@ -39,6 +40,7 @@ export function TaskTable({
   tasks,
   dependencies,
   categories,
+  parts,
   projectId,
 }: TaskTableProps) {
   const [statusFilter, setStatusFilter] = useState("all")
@@ -64,6 +66,7 @@ export function TaskTable({
   })
 
   const categoryMap = new Map(categories.map((c) => [c.id, c.name]))
+  const partMap = new Map(parts.map((part) => [part.id, part.name]))
 
   async function handleStatusChange(taskId: string, status: TaskStatus) {
     const result = await updateTaskStatus(taskId, projectId, status)
@@ -119,13 +122,20 @@ export function TaskTable({
               </TableRow>
             ) : (
               filtered.map((task) => (
-                <TableRow key={task.id}>
+                <TableRow key={task.id} id={`task-${task.id}`} className="deeplink-target">
                   <TableCell>
                     <div className="flex items-center gap-2">
                       {task.is_milestone && (
                         <Flag className="h-3.5 w-3.5 text-primary shrink-0" />
                       )}
-                      <span className="font-medium">{task.title}</span>
+                      <div className="min-w-0">
+                        <span className="font-medium">{task.title}</span>
+                        {task.part_id && (
+                          <p className="text-xs text-muted-foreground">
+                            {partMap.get(task.part_id) ?? "Linked part"}
+                          </p>
+                        )}
+                      </div>
                       <BlockerWarning blockerNames={blockerMap.get(task.id) ?? []} />
                     </div>
                   </TableCell>
@@ -167,6 +177,9 @@ export function TaskTable({
                       <TaskForm
                         projectId={projectId}
                         categories={categories}
+                        parts={parts}
+                        tasks={tasks}
+                        dependencies={dependencies}
                         task={task}
                         trigger={
                           <Button variant="ghost" size="icon" className="h-7 w-7">

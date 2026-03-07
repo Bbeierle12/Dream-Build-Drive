@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback } from "react"
 import { Download, FileSpreadsheet, Printer, Loader2 } from "lucide-react"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -81,6 +82,9 @@ export function ExportMenu({ projectId }: Props) {
         }
       } catch (err) {
         console.error("Export failed:", err)
+        toast.error(
+          err instanceof Error ? err.message : "Export failed"
+        )
       } finally {
         setLoading(null)
       }

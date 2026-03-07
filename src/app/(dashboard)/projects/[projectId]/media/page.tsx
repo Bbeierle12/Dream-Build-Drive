@@ -23,10 +23,35 @@ export default async function MediaPage({
     .eq("project_id", params.projectId)
     .order("created_at", { ascending: false })
 
+  const [{ data: categories }, { data: parts }] = await Promise.all([
+    supabase
+      .from("categories")
+      .select("id, name")
+      .eq("project_id", params.projectId)
+      .order("sort_order"),
+    supabase
+      .from("parts")
+      .select("id, name, category_id")
+      .eq("project_id", params.projectId)
+      .order("name"),
+  ])
+
+  const categoryMap = new Map((categories ?? []).map((category) => [category.id, category.name]))
+  const partMap = new Map((parts ?? []).map((part) => [part.id, part.name]))
+  const attachmentsWithDetails = (attachments ?? []).map((attachment) => ({
+    ...attachment,
+    category_name: attachment.category_id
+      ? categoryMap.get(attachment.category_id) ?? null
+      : null,
+    part_name: attachment.part_id ? partMap.get(attachment.part_id) ?? null : null,
+  }))
+
   return (
     <MediaPageClient
       projectId={params.projectId}
-      attachments={attachments ?? []}
+      attachments={attachmentsWithDetails}
+      categories={categories ?? []}
+      parts={parts ?? []}
     />
   )
 }

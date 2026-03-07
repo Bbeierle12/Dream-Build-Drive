@@ -103,7 +103,7 @@ export function PartsTable({ categories, allCategories, projectId }: PartsTableP
 
         return (
           <Collapsible key={category.id} open={isOpen}>
-            <div className="rounded-md border">
+            <div id={`category-${category.id}`} className="deeplink-target rounded-md border">
               <CollapsibleTrigger asChild>
                 <button
                   onClick={() => toggleCategory(category.id)}
@@ -164,7 +164,7 @@ export function PartsTable({ categories, allCategories, projectId }: PartsTableP
                         sortField,
                         sortDirection
                       ).map((part) => (
-                        <TableRow key={part.id}>
+                        <TableRow key={part.id} id={`part-${part.id}`} className="deeplink-target">
                           <TableCell className="font-medium">
                             {part.name}
                             {part.notes && (

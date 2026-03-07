@@ -14,6 +14,7 @@ type KanbanColumnProps = {
   status: string
   tasks: Task[]
   categoryMap: Map<string, string>
+  partMap: Map<string, string>
   blockerMap: Map<string, string[]>
 }
 
@@ -21,6 +22,7 @@ export function KanbanColumn({
   status,
   tasks,
   categoryMap,
+  partMap,
   blockerMap,
 }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: status })
@@ -54,6 +56,7 @@ export function KanbanColumn({
               categoryName={
                 task.category_id ? categoryMap.get(task.category_id) ?? null : null
               }
+              partName={task.part_id ? partMap.get(task.part_id) ?? null : null}
               blockerNames={blockerMap.get(task.id) ?? []}
             />
           ))}

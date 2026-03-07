@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { ListTodo, Package, FolderOpen, Paperclip } from "lucide-react"
+import { ListTodo, Package, FolderOpen, Paperclip, Wrench } from "lucide-react"
 import type { SearchResult } from "@/lib/types"
 
 type SearchResultsProps = {
@@ -15,6 +15,7 @@ const TYPE_CONFIG: Record<
   part: { label: "Parts", icon: Package },
   category: { label: "Categories", icon: FolderOpen },
   attachment: { label: "Media", icon: Paperclip },
+  spec: { label: "Specs", icon: Wrench },
 }
 
 export function SearchResults({ results, onSelect }: SearchResultsProps) {

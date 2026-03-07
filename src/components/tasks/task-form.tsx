@@ -27,24 +27,40 @@ import {
   PRIORITY_LABELS,
 } from "@/lib/constants"
 import { createTask, updateTask } from "@/actions/tasks"
-import type { Task, Category } from "@/lib/types"
+import type { Task, Category, TaskDependency, Part } from "@/lib/types"
 import { Plus } from "lucide-react"
 
 type TaskFormProps = {
   projectId: string
   categories: Category[]
+  parts?: Part[]
   task?: Task
+  tasks?: Task[]
+  dependencies?: TaskDependency[]
   trigger?: React.ReactNode
 }
 
 export function TaskForm({
   projectId,
   categories,
+  parts = [],
   task,
+  tasks = [],
+  dependencies = [],
   trigger,
 }: TaskFormProps) {
   const [open, setOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const dependencyIds = new Set(
+    task
+      ? dependencies
+          .filter((dependency) => dependency.task_id === task.id)
+          .map((dependency) => dependency.depends_on_task_id)
+      : []
+  )
+  const dependencyOptions = tasks
+    .filter((candidate) => candidate.id !== task?.id)
+    .sort((a, b) => a.title.localeCompare(b.title))
 
   async function handleSubmit(formData: FormData) {
     setIsSubmitting(true)
@@ -145,6 +161,28 @@ export function TaskForm({
               </Select>
             </div>
             <div className="space-y-2">
+              <Label htmlFor="part_id">Part</Label>
+              <Select
+                name="part_id"
+                defaultValue={task?.part_id ?? "none"}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="None" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  {parts.map((part) => (
+                    <SelectItem key={part.id} value={part.id}>
+                      {part.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
               <Label htmlFor="time_estimate_min">Time Estimate (min)</Label>
               <Input
                 id="time_estimate_min"
@@ -200,6 +238,36 @@ export function TaskForm({
               rows={3}
             />
           </div>
+
+          {dependencyOptions.length > 0 && (
+            <div className="space-y-2">
+              <Label>Dependencies</Label>
+              <div className="max-h-40 space-y-2 overflow-y-auto rounded-md border p-3">
+                {dependencyOptions.map((dependencyTask) => (
+                  <label
+                    key={dependencyTask.id}
+                    className="flex items-start gap-2 text-sm"
+                  >
+                    <input
+                      type="checkbox"
+                      name="dependency_ids"
+                      value={dependencyTask.id}
+                      defaultChecked={dependencyIds.has(dependencyTask.id)}
+                      className="mt-0.5 h-4 w-4 rounded border-border"
+                    />
+                    <span className="min-w-0">
+                      <span className="block font-medium">
+                        {dependencyTask.title}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {TASK_STATUS_LABELS[dependencyTask.status]}
+                      </span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
 
           {task && (
             <div className="space-y-2">

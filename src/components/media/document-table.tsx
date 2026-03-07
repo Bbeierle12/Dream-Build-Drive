@@ -13,10 +13,10 @@ import { Button } from "@/components/ui/button"
 import { Download, Trash2, FileText } from "lucide-react"
 import { deleteAttachment } from "@/actions/attachments"
 import { toast } from "sonner"
-import type { Attachment } from "@/lib/types"
+import type { AttachmentWithDetails } from "@/lib/types"
 
 type DocumentTableProps = {
-  documents: Attachment[]
+  documents: AttachmentWithDetails[]
   projectId: string
 }
 
@@ -29,7 +29,7 @@ function formatFileSize(bytes: number): string {
 export function DocumentTable({ documents, projectId }: DocumentTableProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
-  async function handleDelete(doc: Attachment) {
+  async function handleDelete(doc: AttachmentWithDetails) {
     setDeletingId(doc.id)
 
     try {
@@ -58,13 +58,14 @@ export function DocumentTable({ documents, projectId }: DocumentTableProps) {
             <TableHead>Name</TableHead>
             <TableHead>Type</TableHead>
             <TableHead>Size</TableHead>
+            <TableHead>Linked To</TableHead>
             <TableHead>Date</TableHead>
             <TableHead className="w-[80px]" />
           </TableRow>
         </TableHeader>
         <TableBody>
           {documents.map((doc) => (
-            <TableRow key={doc.id}>
+            <TableRow key={doc.id} id={`attachment-${doc.id}`} className="deeplink-target">
               <TableCell>
                 <div className="flex items-center gap-2">
                   <FileText className="h-4 w-4 text-muted-foreground" />
@@ -76,6 +77,9 @@ export function DocumentTable({ documents, projectId }: DocumentTableProps) {
               </TableCell>
               <TableCell className="text-muted-foreground font-mono text-sm">
                 {formatFileSize(doc.file_size)}
+              </TableCell>
+              <TableCell className="text-muted-foreground text-sm">
+                {[doc.category_name, doc.part_name].filter(Boolean).join(" · ") || "—"}
               </TableCell>
               <TableCell className="text-muted-foreground text-sm">
                 {new Date(doc.created_at).toLocaleDateString()}

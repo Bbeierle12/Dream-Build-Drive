@@ -57,3 +57,22 @@
     @apply bg-background text-foreground;
   }
 }
+
+.deeplink-target {
+  scroll-margin-top: 6rem;
+}
+
+.deeplink-target:target {
+  animation: deeplink-highlight 2.4s ease-out;
+  background-color: hsl(var(--accent) / 0.65);
+}
+
+@keyframes deeplink-highlight {
+  0% {
+    background-color: hsl(var(--primary) / 0.3);
+  }
+
+  100% {
+    background-color: hsl(var(--accent) / 0.65);
+  }
+}

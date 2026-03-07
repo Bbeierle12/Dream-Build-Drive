@@ -4,17 +4,21 @@ import { useCallback, useEffect, useState } from "react"
 import Image from "next/image"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { ChevronLeft, ChevronRight, X } from "lucide-react"
-import type { Attachment } from "@/lib/types"
+import { ChevronLeft, ChevronRight, Trash2, X } from "lucide-react"
+import { toast } from "sonner"
+import { deleteAttachment } from "@/actions/attachments"
+import type { AttachmentWithDetails } from "@/lib/types"
 
 type LightboxProps = {
-  photos: Attachment[]
+  photos: AttachmentWithDetails[]
+  projectId: string
   initialIndex: number
   onClose: () => void
 }
 
-export function Lightbox({ photos, initialIndex, onClose }: LightboxProps) {
+export function Lightbox({ photos, projectId, initialIndex, onClose }: LightboxProps) {
   const [index, setIndex] = useState(initialIndex)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const prev = useCallback(() => {
     setIndex((i) => (i > 0 ? i - 1 : photos.length - 1))
@@ -35,6 +39,23 @@ export function Lightbox({ photos, initialIndex, onClose }: LightboxProps) {
   }, [prev, next, onClose])
 
   const photo = photos[index]
+
+  async function handleDelete() {
+    setIsDeleting(true)
+
+    try {
+      const result = await deleteAttachment(photo.id, photo.storage_path, projectId)
+      if (result?.error) {
+        toast.error(result.error)
+        return
+      }
+
+      toast.success("Photo deleted")
+      onClose()
+    } finally {
+      setIsDeleting(false)
+    }
+  }
 
   return (
     <Dialog open onOpenChange={onClose}>
@@ -71,6 +92,16 @@ export function Lightbox({ photos, initialIndex, onClose }: LightboxProps) {
           <Button
             variant="ghost"
             size="sm"
+            className="absolute right-12 top-2 z-10 text-white hover:bg-white/10"
+            disabled={isDeleting}
+            onClick={handleDelete}
+          >
+            <Trash2 className="h-5 w-5" />
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
             className="absolute right-2 top-2 z-10 text-white hover:bg-white/10"
             onClick={onClose}
           >
@@ -79,6 +110,11 @@ export function Lightbox({ photos, initialIndex, onClose }: LightboxProps) {
 
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white text-sm">
             {photo.file_name} ({index + 1} / {photos.length})
+            {(photo.category_name || photo.part_name) && (
+              <div className="mt-1 text-center text-xs text-white/80">
+                {[photo.category_name, photo.part_name].filter(Boolean).join(" · ")}
+              </div>
+            )}
           </div>
         </div>
       </DialogContent>

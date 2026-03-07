@@ -146,7 +146,7 @@ export function SpecTable({
               </TableHeader>
               <TableBody>
                 {groupSpecs.map((spec) => (
-                  <TableRow key={spec.id}>
+                  <TableRow key={spec.id} id={`spec-${spec.id}`} className="deeplink-target">
                     <TableCell className="font-medium">
                       {spec.label}
                       {spec.notes && (

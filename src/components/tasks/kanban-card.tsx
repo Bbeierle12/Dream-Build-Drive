@@ -11,10 +11,11 @@ import type { Task } from "@/lib/types"
 type KanbanCardProps = {
   task: Task
   categoryName: string | null
+  partName?: string | null
   blockerNames: string[]
 }
 
-export function KanbanCard({ task, categoryName, blockerNames }: KanbanCardProps) {
+export function KanbanCard({ task, categoryName, partName, blockerNames }: KanbanCardProps) {
   const {
     attributes,
     listeners,
@@ -58,6 +59,11 @@ export function KanbanCard({ task, categoryName, blockerNames }: KanbanCardProps
         {categoryName && (
           <span className="text-xs text-muted-foreground bg-accent rounded px-1.5 py-0.5">
             {categoryName}
+          </span>
+        )}
+        {partName && (
+          <span className="text-xs text-muted-foreground bg-accent rounded px-1.5 py-0.5">
+            {partName}
           </span>
         )}
       </div>

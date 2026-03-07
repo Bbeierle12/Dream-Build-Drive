@@ -23,7 +23,7 @@ export async function globalSearch(
 
   const limit = SEARCH_CONFIG.MAX_RESULTS_PER_TYPE
 
-  const [tasksRes, partsRes, categoriesRes, attachmentsRes] = await Promise.all([
+  const [tasksRes, partsRes, categoriesRes, attachmentsRes, specsRes] = await Promise.all([
     supabase
       .from("tasks")
       .select("id, title, description, project_id")
@@ -44,6 +44,11 @@ export async function globalSearch(
       .select("id, file_name, project_id")
       .textSearch("fts", tsquery)
       .limit(limit),
+    supabase
+      .from("specifications")
+      .select("id, label, value, unit, spec_type, project_id")
+      .textSearch("fts", tsquery)
+      .limit(limit),
   ])
 
   const results: SearchResult[] = []
@@ -55,7 +60,7 @@ export async function globalSearch(
       title: task.title,
       subtitle: task.description?.slice(0, 60) ?? null,
       project_id: task.project_id,
-      url: `/projects/${task.project_id}/tasks`,
+      url: `/projects/${task.project_id}/tasks#task-${task.id}`,
     })
   }
 
@@ -66,7 +71,7 @@ export async function globalSearch(
       title: part.name,
       subtitle: part.vendor,
       project_id: part.project_id,
-      url: `/projects/${part.project_id}/parts`,
+      url: `/projects/${part.project_id}/parts#part-${part.id}`,
     })
   }
 
@@ -77,7 +82,7 @@ export async function globalSearch(
       title: cat.name,
       subtitle: null,
       project_id: cat.project_id,
-      url: `/projects/${cat.project_id}/parts`,
+      url: `/projects/${cat.project_id}/parts#category-${cat.id}`,
     })
   }
 
@@ -88,7 +93,19 @@ export async function globalSearch(
       title: att.file_name,
       subtitle: null,
       project_id: att.project_id,
-      url: `/projects/${att.project_id}/media`,
+      url: `/projects/${att.project_id}/media#attachment-${att.id}`,
+    })
+  }
+
+  for (const spec of specsRes.data ?? []) {
+    const subtitle = [spec.spec_type, spec.value, spec.unit].filter(Boolean).join(" · ")
+    results.push({
+      type: "spec",
+      id: spec.id,
+      title: spec.label,
+      subtitle: subtitle || null,
+      project_id: spec.project_id,
+      url: `/projects/${spec.project_id}/specs#spec-${spec.id}`,
     })
   }
 

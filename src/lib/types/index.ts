@@ -60,6 +60,11 @@ export type Attachment = {
   created_at: string
 }
 
+export type AttachmentWithDetails = Attachment & {
+  category_name?: string | null
+  part_name?: string | null
+}
+
 export type CategoryWithParts = Category & {
   parts: Part[]
 }
@@ -116,7 +121,7 @@ export type TaskWithDependencies = Task & {
 }
 
 export type SearchResult = {
-  type: "task" | "part" | "category" | "attachment"
+  type: "task" | "part" | "category" | "attachment" | "spec"
   id: string
   title: string
   subtitle: string | null

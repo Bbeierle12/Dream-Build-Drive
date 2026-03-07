@@ -5,16 +5,23 @@ import { UploadDropzone } from "@/components/media/upload-dropzone"
 import { PhotoGrid } from "@/components/media/photo-grid"
 import { DocumentTable } from "@/components/media/document-table"
 import { MediaFilterBar } from "@/components/media/media-filter-bar"
-import type { Attachment } from "@/lib/types"
+import type { AttachmentWithDetails, Category, Part } from "@/lib/types"
 
 type MediaPageClientProps = {
   projectId: string
-  attachments: Attachment[]
+  attachments: AttachmentWithDetails[]
+  categories: Pick<Category, "id" | "name">[]
+  parts: Pick<Part, "id" | "name" | "category_id">[]
 }
 
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/svg+xml"]
 
-export function MediaPageClient({ projectId, attachments }: MediaPageClientProps) {
+export function MediaPageClient({
+  projectId,
+  attachments,
+  categories,
+  parts,
+}: MediaPageClientProps) {
   const [filter, setFilter] = useState<"all" | "photos" | "documents">("all")
 
   const photos = attachments.filter((a) => IMAGE_TYPES.includes(a.file_type))
@@ -29,7 +36,7 @@ export function MediaPageClient({ projectId, attachments }: MediaPageClientProps
         </p>
       </div>
 
-      <UploadDropzone projectId={projectId} />
+      <UploadDropzone projectId={projectId} categories={categories} parts={parts} />
 
       <MediaFilterBar
         filter={filter}
@@ -43,7 +50,7 @@ export function MediaPageClient({ projectId, attachments }: MediaPageClientProps
           {filter === "all" && (
             <h2 className="mb-3 text-lg font-semibold">Photos</h2>
           )}
-          <PhotoGrid photos={photos} />
+          <PhotoGrid photos={photos} projectId={projectId} />
         </div>
       )}
 

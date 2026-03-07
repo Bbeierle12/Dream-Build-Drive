@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import {
   DndContext,
   DragOverlay,
@@ -16,14 +16,16 @@ import {
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable"
 import { KANBAN_COLUMNS } from "@/lib/constants"
 import { updateTaskStatus } from "@/actions/tasks"
+import { toast } from "sonner"
 import { KanbanColumn } from "./kanban-column"
 import { KanbanCard } from "./kanban-card"
-import type { Task, TaskDependency, Category, TaskStatus } from "@/lib/types"
+import type { Task, TaskDependency, Category, TaskStatus, Part } from "@/lib/types"
 
 type KanbanBoardProps = {
   tasks: Task[]
   dependencies: TaskDependency[]
   categories: Category[]
+  parts: Part[]
   projectId: string
 }
 
@@ -31,10 +33,15 @@ export function KanbanBoard({
   tasks: initialTasks,
   dependencies,
   categories,
+  parts,
   projectId,
 }: KanbanBoardProps) {
   const [tasks, setTasks] = useState(initialTasks)
   const [activeId, setActiveId] = useState<string | null>(null)
+
+  useEffect(() => {
+    setTasks(initialTasks)
+  }, [initialTasks])
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -42,6 +49,7 @@ export function KanbanBoard({
   )
 
   const categoryMap = new Map(categories.map((c) => [c.id, c.name]))
+  const partMap = new Map(parts.map((part) => [part.id, part.name]))
 
   const blockerMap = new Map<string, string[]>()
   for (const dep of dependencies) {
@@ -105,7 +113,11 @@ export function KanbanBoard({
 
     // If status actually changed, persist to DB
     if (task.status !== originalTask.status) {
-      await updateTaskStatus(task.id, projectId, task.status)
+      const result = await updateTaskStatus(task.id, projectId, task.status)
+      if (result?.error) {
+        toast.error(result.error)
+        setTasks(initialTasks)
+      }
     }
   }
 
@@ -124,6 +136,7 @@ export function KanbanBoard({
             status={col.id}
             tasks={tasksByStatus.get(col.id) ?? []}
             categoryMap={categoryMap}
+            partMap={partMap}
             blockerMap={blockerMap}
           />
         ))}
@@ -136,6 +149,11 @@ export function KanbanBoard({
             categoryName={
               activeTask.category_id
                 ? categoryMap.get(activeTask.category_id) ?? null
+                : null
+            }
+            partName={
+              activeTask.part_id
+                ? partMap.get(activeTask.part_id) ?? null
                 : null
             }
             blockerNames={blockerMap.get(activeTask.id) ?? []}

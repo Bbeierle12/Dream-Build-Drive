@@ -3,13 +3,14 @@
 import { useState } from "react"
 import Image from "next/image"
 import { Lightbox } from "./lightbox"
-import type { Attachment } from "@/lib/types"
+import type { AttachmentWithDetails } from "@/lib/types"
 
 type PhotoGridProps = {
-  photos: Attachment[]
+  photos: AttachmentWithDetails[]
+  projectId: string
 }
 
-export function PhotoGrid({ photos }: PhotoGridProps) {
+export function PhotoGrid({ photos, projectId }: PhotoGridProps) {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
 
   if (photos.length === 0) {
@@ -26,8 +27,9 @@ export function PhotoGrid({ photos }: PhotoGridProps) {
         {photos.map((photo, index) => (
           <button
             key={photo.id}
+            id={`attachment-${photo.id}`}
             onClick={() => setSelectedIndex(index)}
-            className="group relative aspect-square overflow-hidden rounded-md border border-border"
+            className="deeplink-target group relative aspect-square overflow-hidden rounded-md border border-border"
           >
             <Image
               src={photo.url}
@@ -36,6 +38,12 @@ export function PhotoGrid({ photos }: PhotoGridProps) {
               className="object-cover transition-transform group-hover:scale-105"
               sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
             />
+            {(photo.category_name || photo.part_name) && (
+              <div className="absolute inset-x-0 bottom-0 bg-black/65 px-2 py-1 text-left text-[11px] text-white opacity-0 transition-opacity group-hover:opacity-100">
+                {photo.category_name && <div>{photo.category_name}</div>}
+                {photo.part_name && <div>{photo.part_name}</div>}
+              </div>
+            )}
           </button>
         ))}
       </div>
@@ -43,6 +51,7 @@ export function PhotoGrid({ photos }: PhotoGridProps) {
       {selectedIndex !== null && (
         <Lightbox
           photos={photos}
+          projectId={projectId}
           initialIndex={selectedIndex}
           onClose={() => setSelectedIndex(null)}
         />

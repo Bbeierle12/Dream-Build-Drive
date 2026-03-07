@@ -18,17 +18,34 @@ export default async function CalendarPage({
 
   if (!project) notFound()
 
-  const { data: categories } = await supabase
-    .from("categories")
-    .select("*")
-    .eq("project_id", params.projectId)
-    .order("sort_order")
+  const [{ data: categories }, { data: parts }, { data: tasks }, { data: dependencies }] =
+    await Promise.all([
+      supabase
+        .from("categories")
+        .select("*")
+        .eq("project_id", params.projectId)
+        .order("sort_order"),
+      supabase
+        .from("parts")
+        .select("*")
+        .eq("project_id", params.projectId)
+        .order("name"),
+      supabase
+        .from("tasks")
+        .select("*")
+        .eq("project_id", params.projectId)
+        .order("due_date", { ascending: true, nullsFirst: false }),
+      supabase
+        .from("task_dependencies")
+        .select("*"),
+    ])
 
-  const { data: tasks } = await supabase
-    .from("tasks")
-    .select("*")
-    .eq("project_id", params.projectId)
-    .order("due_date", { ascending: true, nullsFirst: false })
+  const taskList = tasks ?? []
+  const taskIds = new Set(taskList.map((task) => task.id))
+  const scopedDependencies = (dependencies ?? []).filter(
+    (dependency) =>
+      taskIds.has(dependency.task_id) && taskIds.has(dependency.depends_on_task_id)
+  )
 
   return (
     <div className="space-y-6">
@@ -42,10 +59,13 @@ export default async function CalendarPage({
         <TaskForm
           projectId={params.projectId}
           categories={categories ?? []}
+          parts={parts ?? []}
+          tasks={taskList}
+          dependencies={scopedDependencies}
         />
       </div>
 
-      <CalendarView tasks={tasks ?? []} />
+      <CalendarView tasks={taskList} />
     </div>
   )
 }
