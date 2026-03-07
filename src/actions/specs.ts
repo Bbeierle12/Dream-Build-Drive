@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { createClient } from "@/lib/supabase/server"
+import { normalizeOptionalSelectValue } from "@/lib/form-utils"
 import type { SpecType, SpecTemplate, Category } from "@/lib/types"
 
 export async function getSpecifications(projectId: string) {
@@ -32,10 +33,10 @@ export async function createSpecification(
     spec_type: formData.get("spec_type") as SpecType,
     label: formData.get("label") as string,
     value: formData.get("value") as string,
-    unit: (formData.get("unit") as string) || null,
+    unit: normalizeOptionalSelectValue(formData.get("unit")),
     notes: (formData.get("notes") as string) || null,
-    part_id: (formData.get("part_id") as string) || null,
-    category_id: (formData.get("category_id") as string) || null,
+    part_id: normalizeOptionalSelectValue(formData.get("part_id")),
+    category_id: normalizeOptionalSelectValue(formData.get("category_id")),
   })
 
   if (error) {
@@ -59,10 +60,10 @@ export async function updateSpecification(
       spec_type: formData.get("spec_type") as SpecType,
       label: formData.get("label") as string,
       value: formData.get("value") as string,
-      unit: (formData.get("unit") as string) || null,
+      unit: normalizeOptionalSelectValue(formData.get("unit")),
       notes: (formData.get("notes") as string) || null,
-      part_id: (formData.get("part_id") as string) || null,
-      category_id: (formData.get("category_id") as string) || null,
+      part_id: normalizeOptionalSelectValue(formData.get("part_id")),
+      category_id: normalizeOptionalSelectValue(formData.get("category_id")),
     })
     .eq("id", specId)
 
@@ -77,7 +78,11 @@ export async function updateSpecification(
 export async function deleteSpecification(specId: string, projectId: string) {
   const supabase = createClient()
 
-  await supabase.from("specifications").delete().eq("id", specId)
+  const { error } = await supabase.from("specifications").delete().eq("id", specId)
+
+  if (error) {
+    return { error: error.message }
+  }
 
   revalidatePath(`/projects/${projectId}/specs`)
   revalidatePath(`/projects/${projectId}`)

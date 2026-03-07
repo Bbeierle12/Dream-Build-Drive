@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useTransition } from "react"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { SpecTypeBadge } from "./spec-type-badge"
 import { applySpecTemplate, applyAllTemplates } from "@/actions/specs"
@@ -61,14 +62,30 @@ export function TemplateBrowser({
     if (!catId) return
 
     startTransition(async () => {
-      await applySpecTemplate(projectId, catId, template)
+      const result = await applySpecTemplate(projectId, catId, template)
+      if (result?.error) {
+        toast.error(result.error)
+        return
+      }
       setAppliedIds((prev) => new Set(prev).add(template.id))
     })
   }
 
   function handleApplyAll() {
     startTransition(async () => {
-      await applyAllTemplates(projectId, categories)
+      const result = await applyAllTemplates(projectId, categories)
+      if (result?.error) {
+        toast.error(result.error)
+        return
+      }
+
+      if (typeof result?.applied === "number") {
+        toast.success(
+          result.applied > 0
+            ? `Applied ${result.applied} template${result.applied === 1 ? "" : "s"}`
+            : "No new templates to apply"
+        )
+      }
     })
   }
 

@@ -64,6 +64,7 @@ export async function createAttachment({
   })
 
   if (error) {
+    await supabase.storage.from("attachments").remove([storagePath])
     return { error: error.message }
   }
 
@@ -73,8 +74,37 @@ export async function createAttachment({
 export async function deleteAttachment(attachmentId: string, storagePath: string, projectId: string) {
   const supabase = createClient()
 
-  await supabase.storage.from("attachments").remove([storagePath])
-  await supabase.from("attachments").delete().eq("id", attachmentId)
+  const { data: attachment, error: loadError } = await supabase
+    .from("attachments")
+    .select("project_id, storage_path")
+    .eq("id", attachmentId)
+    .single()
+
+  if (loadError || !attachment) {
+    return { error: loadError?.message ?? "Attachment not found" }
+  }
+
+  if (attachment.project_id !== projectId) {
+    return { error: "Attachment does not belong to this project" }
+  }
+
+  const pathToDelete = attachment.storage_path || storagePath
+  const { error: storageError } = await supabase.storage
+    .from("attachments")
+    .remove([pathToDelete])
+
+  if (storageError) {
+    return { error: storageError.message }
+  }
+
+  const { error: deleteError } = await supabase
+    .from("attachments")
+    .delete()
+    .eq("id", attachmentId)
+
+  if (deleteError) {
+    return { error: deleteError.message }
+  }
 
   revalidatePath(`/projects/${projectId}/media`)
 }

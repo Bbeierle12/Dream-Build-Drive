@@ -66,10 +66,14 @@ export async function updateProject(projectId: string, formData: FormData) {
 export async function deleteProject(projectId: string) {
   const supabase = createClient()
 
-  await supabase
+  const { error } = await supabase
     .from("projects")
     .delete()
     .eq("id", projectId)
+
+  if (error) {
+    return { error: error.message }
+  }
 
   revalidatePath("/")
   redirect("/")

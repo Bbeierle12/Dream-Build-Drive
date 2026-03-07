@@ -1,36 +1,117 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Dream Build Drive
 
-## Getting Started
+Dream Build Drive is a Next.js + Supabase app for managing car builds end to end. It combines project planning, parts tracking, task management, media uploads, specifications, analytics, search, and export flows in a single dashboard.
 
-First, run the development server:
+## Stack
+
+- Next.js App Router
+- React 18
+- TypeScript
+- Tailwind CSS
+- Supabase Auth, Postgres, Row Level Security, and Storage
+- Vitest for unit tests
+
+## Core Features
+
+- Authenticated multi-project garage dashboard
+- Parts tracking with category rollups and budget summaries
+- Task management with table, kanban, calendar, and gantt views
+- Media uploads backed by Supabase Storage
+- Specifications and reusable spec templates
+- Global search across project data
+- CSV export and printable reports
+
+## Local Setup
+
+1. Install dependencies:
+
+```bash
+npm install
+```
+
+2. Copy the environment template and fill in your Supabase values:
+
+```bash
+cp .env.example .env.local
+```
+
+Required variables:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+```
+
+3. Apply the SQL migrations in `supabase/migrations` to your Supabase project in order:
+
+- `00001_initial_schema.sql`
+- `00002_tasks_and_search.sql`
+- `00003_specs_and_templates.sql`
+- `00004_harden_attachment_storage_policies.sql`
+
+4. Start the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `npm run dev`: start the app locally
+- `npm run clean`: remove `.next` and `tsconfig.tsbuildinfo`
+- `npm run build`: run a clean production build
+- `npm run lint`: run Next.js ESLint checks
+- `npm run typecheck`: run TypeScript without emitting
+- `npm test`: run the Vitest suite
+- `npm run check`: run lint, typecheck, and tests together
 
-## Learn More
+## Project Structure
 
-To learn more about Next.js, take a look at the following resources:
+- `src/app`: routes and layouts
+- `src/actions`: server actions for mutations and fetch helpers
+- `src/components`: UI and feature components
+- `src/lib`: shared utilities, types, constants, and Supabase clients
+- `src/__tests__`: unit tests
+- `supabase/migrations`: schema and policy migrations
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Data Model Overview
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `projects`: root entity for each build
+- `categories`: project-specific grouping for parts and specs
+- `parts`: cost and procurement tracking
+- `attachments`: uploaded photos and documents
+- `tasks`: work tracking with dates, priorities, and milestones
+- `task_dependencies`: task blocking relationships
+- `specifications`: project specs, optionally linked to a category or part
+- `spec_templates`: reusable spec seeds
 
-## Deploy on Vercel
+## Quality Gates
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+This repo now has a GitHub Actions workflow at `.github/workflows/ci.yml` that runs:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. `npm ci`
+2. `npm run check`
+3. `npm run build`
+
+Local changes should meet the same bar before merge.
+
+## Deployment Notes
+
+- The app expects Supabase Auth and Storage to be configured.
+- The `attachments` storage bucket must exist.
+- Auth callback routing uses `/auth/callback`.
+- Production deploys should apply all migrations before shipping the app build.
+
+## Current Stabilization Baseline
+
+Part one of the stabilization pass focused on:
+
+- deterministic builds
+- aligned Next.js and ESLint versions
+- CI coverage for lint, typecheck, tests, and production build
+- stronger attachment storage policies
+- first-pass mutation error handling in tasks, specs, media, and project settings
+
+Further product completion work should build on that baseline rather than bypass it.

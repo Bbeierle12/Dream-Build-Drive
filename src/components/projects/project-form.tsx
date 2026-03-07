@@ -1,5 +1,7 @@
 "use client"
 
+import { useState } from "react"
+import { toast } from "sonner"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -8,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { Project } from "@/lib/types"
 
 type ProjectFormProps = {
-  action: (formData: FormData) => void
+  action: (formData: FormData) => Promise<{ error?: string } | void>
   project?: Project
   submitLabel?: string
 }
@@ -18,8 +20,28 @@ export function ProjectForm({
   project,
   submitLabel = "Create Project",
 }: ProjectFormProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  async function handleSubmit(formData: FormData) {
+    setIsSubmitting(true)
+
+    try {
+      const result = await action(formData)
+      if (result?.error) {
+        toast.error(result.error)
+        return
+      }
+
+      if (project) {
+        toast.success("Project updated")
+      }
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   return (
-    <form action={action}>
+    <form action={handleSubmit}>
       <div className="space-y-6">
         <Card>
           <CardHeader>
@@ -132,7 +154,7 @@ export function ProjectForm({
           </CardContent>
         </Card>
 
-        <Button type="submit" className="w-full">
+        <Button type="submit" className="w-full" disabled={isSubmitting}>
           {submitLabel}
         </Button>
       </div>

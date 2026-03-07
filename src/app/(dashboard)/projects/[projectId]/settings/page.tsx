@@ -1,8 +1,8 @@
 import { createClient } from "@/lib/supabase/server"
 import { notFound } from "next/navigation"
 import { ProjectForm } from "@/components/projects/project-form"
+import { DeleteProjectButton } from "@/components/projects/delete-project-button"
 import { updateProject, deleteProject } from "@/actions/projects"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 
 export default async function ProjectSettings({
@@ -44,11 +44,7 @@ export default async function ProjectSettings({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={deleteWithId}>
-            <Button variant="destructive" type="submit">
-              Delete Project
-            </Button>
-          </form>
+          <DeleteProjectButton action={deleteWithId} />
         </CardContent>
       </Card>
     </div>

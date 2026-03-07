@@ -41,7 +41,7 @@ export function UploadDropzone({ projectId }: UploadDropzoneProps) {
             continue
           }
 
-          await createAttachment({
+          const attachmentResult = await createAttachment({
             projectId,
             fileName: file.name,
             fileType: file.type,
@@ -50,6 +50,11 @@ export function UploadDropzone({ projectId }: UploadDropzoneProps) {
             url: result.publicUrl!,
           })
 
+          if (attachmentResult?.error) {
+            toast.error(`Failed to save ${file.name}: ${attachmentResult.error}`)
+            continue
+          }
+
           completed++
           setProgress(Math.round((completed / fileArray.length) * 100))
         } catch {
@@ -57,7 +62,17 @@ export function UploadDropzone({ projectId }: UploadDropzoneProps) {
         }
       }
 
-      toast.success(`Uploaded ${completed} file${completed !== 1 ? "s" : ""}`)
+      const failed = fileArray.length - completed
+      if (completed > 0) {
+        toast.success(
+          failed > 0
+            ? `Uploaded ${completed} file${completed === 1 ? "" : "s"} with ${failed} failure${failed === 1 ? "" : "s"}`
+            : `Uploaded ${completed} file${completed === 1 ? "" : "s"}`
+        )
+      } else {
+        toast.error("No files were uploaded")
+      }
+
       setUploading(false)
       setProgress(0)
     },

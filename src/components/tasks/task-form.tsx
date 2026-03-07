@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { toast } from "sonner"
 import {
   Dialog,
   DialogContent,
@@ -43,14 +44,25 @@ export function TaskForm({
   trigger,
 }: TaskFormProps) {
   const [open, setOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   async function handleSubmit(formData: FormData) {
-    if (task) {
-      await updateTask(task.id, projectId, formData)
-    } else {
-      await createTask(projectId, formData)
+    setIsSubmitting(true)
+
+    try {
+      const result = task
+        ? await updateTask(task.id, projectId, formData)
+        : await createTask(projectId, formData)
+
+      if (result?.error) {
+        toast.error(result.error)
+        return
+      }
+
+      setOpen(false)
+    } finally {
+      setIsSubmitting(false)
     }
-    setOpen(false)
   }
 
   return (
@@ -203,7 +215,7 @@ export function TaskForm({
             </div>
           )}
 
-          <Button type="submit" className="w-full">
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
             {task ? "Save Changes" : "Add Task"}
           </Button>
         </form>

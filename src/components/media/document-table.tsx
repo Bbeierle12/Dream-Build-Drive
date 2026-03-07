@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import {
   Table,
   TableBody,
@@ -11,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Download, Trash2, FileText } from "lucide-react"
 import { deleteAttachment } from "@/actions/attachments"
+import { toast } from "sonner"
 import type { Attachment } from "@/lib/types"
 
 type DocumentTableProps = {
@@ -25,6 +27,21 @@ function formatFileSize(bytes: number): string {
 }
 
 export function DocumentTable({ documents, projectId }: DocumentTableProps) {
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+
+  async function handleDelete(doc: Attachment) {
+    setDeletingId(doc.id)
+
+    try {
+      const result = await deleteAttachment(doc.id, doc.storage_path, projectId)
+      if (result?.error) {
+        toast.error(result.error)
+      }
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
   if (documents.length === 0) {
     return (
       <p className="py-8 text-center text-sm text-muted-foreground">
@@ -74,9 +91,8 @@ export function DocumentTable({ documents, projectId }: DocumentTableProps) {
                     variant="ghost"
                     size="sm"
                     className="h-7 w-7 p-0 hover:text-destructive"
-                    onClick={() =>
-                      deleteAttachment(doc.id, doc.storage_path, projectId)
-                    }
+                    disabled={deletingId === doc.id}
+                    onClick={() => handleDelete(doc)}
                   >
                     <Trash2 className="h-3 w-3" />
                   </Button>

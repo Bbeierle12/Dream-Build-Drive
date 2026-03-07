@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { toast } from "sonner"
 import {
   Table,
   TableBody,
@@ -63,6 +64,7 @@ export function SpecTable({
 }: SpecTableProps) {
   const [typeFilter, setTypeFilter] = useState("all")
   const [groupMode, setGroupMode] = useState<GroupMode>("category")
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   const typeOptions = SPEC_TYPES.map((t) => ({
     value: t,
@@ -77,6 +79,19 @@ export function SpecTable({
   const grouped = groupSpecs(filtered, groupMode, categories)
   const partMap = new Map(parts.map((p) => [p.id, p.name]))
   const categoryMap = new Map(categories.map((c) => [c.id, c.name]))
+
+  async function handleDelete(specId: string) {
+    setDeletingId(specId)
+
+    try {
+      const result = await deleteSpecification(specId, projectId)
+      if (result?.error) {
+        toast.error(result.error)
+      }
+    } finally {
+      setDeletingId(null)
+    }
+  }
 
   return (
     <div className="space-y-4">
@@ -184,9 +199,8 @@ export function SpecTable({
                           variant="ghost"
                           size="sm"
                           className="h-7 w-7 p-0 hover:text-destructive"
-                          onClick={() =>
-                            deleteSpecification(spec.id, projectId)
-                          }
+                          disabled={deletingId === spec.id}
+                          onClick={() => handleDelete(spec.id)}
                         >
                           <Trash2 className="h-3 w-3" />
                         </Button>

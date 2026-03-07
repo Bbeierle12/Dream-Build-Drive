@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { toast } from "sonner"
 import {
   Dialog,
   DialogContent,
@@ -41,16 +42,27 @@ export function SpecForm({
 }: SpecFormProps) {
   const [open, setOpen] = useState(false)
   const [specType, setSpecType] = useState<string>(spec?.spec_type ?? "torque")
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const unitOptions = SPEC_TYPE_UNITS[specType] ?? [""]
 
   async function handleSubmit(formData: FormData) {
-    if (spec) {
-      await updateSpecification(spec.id, projectId, formData)
-    } else {
-      await createSpecification(projectId, formData)
+    setIsSubmitting(true)
+
+    try {
+      const result = spec
+        ? await updateSpecification(spec.id, projectId, formData)
+        : await createSpecification(projectId, formData)
+
+      if (result?.error) {
+        toast.error(result.error)
+        return
+      }
+
+      setOpen(false)
+    } finally {
+      setIsSubmitting(false)
     }
-    setOpen(false)
   }
 
   return (
@@ -181,7 +193,7 @@ export function SpecForm({
             />
           </div>
 
-          <Button type="submit" className="w-full">
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
             {spec ? "Save Changes" : "Add Specification"}
           </Button>
         </form>

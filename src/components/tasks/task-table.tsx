@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { toast } from "sonner"
 import {
   Table,
   TableBody,
@@ -43,6 +44,7 @@ export function TaskTable({
   const [statusFilter, setStatusFilter] = useState("all")
   const [priorityFilter, setPriorityFilter] = useState("all")
   const [categoryFilter, setCategoryFilter] = useState("all")
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   const blockerMap = new Map<string, string[]>()
   for (const dep of dependencies) {
@@ -62,6 +64,26 @@ export function TaskTable({
   })
 
   const categoryMap = new Map(categories.map((c) => [c.id, c.name]))
+
+  async function handleStatusChange(taskId: string, status: TaskStatus) {
+    const result = await updateTaskStatus(taskId, projectId, status)
+    if (result?.error) {
+      toast.error(result.error)
+    }
+  }
+
+  async function handleDelete(taskId: string) {
+    setDeletingId(taskId)
+
+    try {
+      const result = await deleteTask(taskId, projectId)
+      if (result?.error) {
+        toast.error(result.error)
+      }
+    } finally {
+      setDeletingId(null)
+    }
+  }
 
   return (
     <div className="space-y-4">
@@ -111,7 +133,7 @@ export function TaskTable({
                     <Select
                       defaultValue={task.status}
                       onValueChange={(value) =>
-                        updateTaskStatus(task.id, projectId, value as TaskStatus)
+                        handleStatusChange(task.id, value as TaskStatus)
                       }
                     >
                       <SelectTrigger className="h-7 w-[130px]">
@@ -156,7 +178,8 @@ export function TaskTable({
                         variant="ghost"
                         size="icon"
                         className="h-7 w-7 text-destructive"
-                        onClick={() => deleteTask(task.id, projectId)}
+                        disabled={deletingId === task.id}
+                        onClick={() => handleDelete(task.id)}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>

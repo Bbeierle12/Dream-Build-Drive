@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { createClient } from "@/lib/supabase/server"
+import { normalizeOptionalSelectValue } from "@/lib/form-utils"
 import type { TaskStatus } from "@/lib/types"
 
 export async function createTask(projectId: string, formData: FormData) {
@@ -9,8 +10,8 @@ export async function createTask(projectId: string, formData: FormData) {
 
   const { error } = await supabase.from("tasks").insert({
     project_id: projectId,
-    category_id: (formData.get("category_id") as string) || null,
-    part_id: (formData.get("part_id") as string) || null,
+    category_id: normalizeOptionalSelectValue(formData.get("category_id")),
+    part_id: normalizeOptionalSelectValue(formData.get("part_id")),
     title: formData.get("title") as string,
     description: (formData.get("description") as string) || null,
     status: (formData.get("status") as TaskStatus) || "backlog",
@@ -44,8 +45,8 @@ export async function updateTask(
   const { error } = await supabase
     .from("tasks")
     .update({
-      category_id: (formData.get("category_id") as string) || null,
-      part_id: (formData.get("part_id") as string) || null,
+      category_id: normalizeOptionalSelectValue(formData.get("category_id")),
+      part_id: normalizeOptionalSelectValue(formData.get("part_id")),
       title: formData.get("title") as string,
       description: (formData.get("description") as string) || null,
       status: (formData.get("status") as TaskStatus) || "backlog",
@@ -76,7 +77,11 @@ export async function updateTask(
 export async function deleteTask(taskId: string, projectId: string) {
   const supabase = createClient()
 
-  await supabase.from("tasks").delete().eq("id", taskId)
+  const { error } = await supabase.from("tasks").delete().eq("id", taskId)
+
+  if (error) {
+    return { error: error.message }
+  }
 
   revalidatePath(`/projects/${projectId}/tasks`)
   revalidatePath(`/projects/${projectId}/tasks/kanban`)
@@ -135,11 +140,15 @@ export async function removeTaskDependency(
 ) {
   const supabase = createClient()
 
-  await supabase
+  const { error } = await supabase
     .from("task_dependencies")
     .delete()
     .eq("task_id", taskId)
     .eq("depends_on_task_id", dependsOnTaskId)
+
+  if (error) {
+    return { error: error.message }
+  }
 
   revalidatePath(`/projects/${projectId}/tasks`)
   revalidatePath(`/projects/${projectId}/tasks/kanban`)
