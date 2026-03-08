@@ -74,6 +74,8 @@ Open `http://localhost:3000`.
 - `src/components`: UI and feature components
 - `src/lib`: shared utilities, types, constants, and Supabase clients
 - `src/__tests__`: unit tests
+- `docs/roadmap.md`: formal product roadmap and phase plan
+- `FUTURE.md`: deferred backlog outside the active phase
 - `supabase/migrations`: schema and policy migrations
 
 ## Data Model Overview
