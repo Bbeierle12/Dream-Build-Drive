@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { toast } from "sonner"
 import {
   Dialog,
@@ -26,9 +26,15 @@ import {
   TASK_PRIORITIES,
   PRIORITY_LABELS,
 } from "@/lib/constants"
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
 import { createTask, updateTask } from "@/actions/tasks"
+import { getSpecsForContext } from "@/actions/specs"
 import type { Task, Category, TaskDependency, Part } from "@/lib/types"
-import { Plus } from "lucide-react"
+import { Plus, ChevronDown } from "lucide-react"
 
 type TaskFormProps = {
   projectId: string
@@ -51,6 +57,22 @@ export function TaskForm({
 }: TaskFormProps) {
   const [open, setOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [relatedSpecs, setRelatedSpecs] = useState<{ id: string; label: string; value: string; unit: string | null; spec_type: string }[]>([])
+  const [selectedCategoryId, setSelectedCategoryId] = useState(task?.category_id ?? "none")
+  const [selectedPartId, setSelectedPartId] = useState(task?.part_id ?? "none")
+
+  useEffect(() => {
+    const catId = selectedCategoryId === "none" ? null : selectedCategoryId
+    const prtId = selectedPartId === "none" ? null : selectedPartId
+    if (!catId && !prtId) {
+      setRelatedSpecs([])
+      return
+    }
+    getSpecsForContext(projectId, catId, prtId).then((result) => {
+      setRelatedSpecs(result.data)
+    })
+  }, [selectedCategoryId, selectedPartId, projectId])
+
   const dependencyIds = new Set(
     task
       ? dependencies
@@ -145,7 +167,8 @@ export function TaskForm({
               <Label htmlFor="category_id">Category</Label>
               <Select
                 name="category_id"
-                defaultValue={task?.category_id ?? "none"}
+                value={selectedCategoryId}
+                onValueChange={setSelectedCategoryId}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="None" />
@@ -164,7 +187,8 @@ export function TaskForm({
               <Label htmlFor="part_id">Part</Label>
               <Select
                 name="part_id"
-                defaultValue={task?.part_id ?? "none"}
+                value={selectedPartId}
+                onValueChange={setSelectedPartId}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="None" />
@@ -180,6 +204,27 @@ export function TaskForm({
               </Select>
             </div>
           </div>
+
+          {relatedSpecs.length > 0 && (
+            <Collapsible>
+              <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-zinc-300">
+                <ChevronDown className="h-3 w-3" />
+                Related Specs ({relatedSpecs.length})
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="mt-2 rounded-md border border-zinc-800 bg-zinc-900/50 p-2 space-y-1">
+                  {relatedSpecs.map((spec) => (
+                    <div key={spec.id} className="flex items-center justify-between text-xs">
+                      <span className="text-zinc-300">{spec.label}</span>
+                      <span className="font-mono text-zinc-400">
+                        {spec.value}{spec.unit ? ` ${spec.unit}` : ""}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          )}
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">

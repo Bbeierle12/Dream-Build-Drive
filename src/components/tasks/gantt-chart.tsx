@@ -11,6 +11,9 @@ import {
   isWeekend,
   getDaysBetween,
 } from "@/lib/gantt-utils"
+import { computeCriticalPath } from "@/lib/task-utils"
+import { updateTask } from "@/actions/tasks"
+import { addDaysToDate } from "@/lib/gantt-drag-utils"
 import { GanttHeader } from "./gantt-header"
 import { GanttBar } from "./gantt-bar"
 import { ChevronDown, ChevronRight } from "lucide-react"
@@ -30,6 +33,31 @@ export function GanttChart({ tasks, categories }: GanttChartProps) {
   const days = getDateArray(rangeStart, rangeEnd)
   const totalWidth = days.length * GANTT_CONFIG.DAY_WIDTH
   const groups = groupTasksByCategory(tasks, categories)
+  const criticalPath = computeCriticalPath(tasks)
+
+  async function handleDragReschedule(taskId: string, daysDelta: number) {
+    const task = tasks.find((t) => t.id === taskId)
+    if (!task) return
+
+    const formData = new FormData()
+    formData.set("title", task.title)
+    formData.set("status", task.status)
+    formData.set("priority", task.priority)
+    if (task.start_date) formData.set("start_date", addDaysToDate(task.start_date, daysDelta))
+    if (task.due_date) formData.set("due_date", addDaysToDate(task.due_date, daysDelta))
+    if (task.category_id) formData.set("category_id", task.category_id)
+    if (task.part_id) formData.set("part_id", task.part_id)
+    if (task.description) formData.set("description", task.description)
+    if (task.is_milestone) formData.set("is_milestone", "true")
+    if (task.time_estimate_min != null) formData.set("time_estimate_min", String(task.time_estimate_min))
+    if (task.time_actual_min != null) formData.set("time_actual_min", String(task.time_actual_min))
+
+    for (const dep of task.dependencies) {
+      formData.append("dependency_ids", dep.depends_on_task_id)
+    }
+
+    await updateTask(taskId, task.project_id, formData)
+  }
 
   // Auto-scroll to today on mount
   useEffect(() => {
@@ -188,7 +216,7 @@ export function GanttChart({ tasks, categories }: GanttChartProps) {
                     right: 0,
                   }}
                 >
-                  <GanttBar task={row.task} position={pos} />
+                  <GanttBar task={row.task} position={pos} isCritical={criticalPath.has(row.task.id)} onDragReschedule={handleDragReschedule} />
                 </div>
               )
             })}
@@ -217,18 +245,21 @@ export function GanttChart({ tasks, categories }: GanttChartProps) {
                   const toY = toIdx * GANTT_CONFIG.ROW_HEIGHT + GANTT_CONFIG.ROW_HEIGHT / 2
                   const midX = (fromX + toX) / 2
 
+                  const isCriticalEdge = criticalPath.has(dep.depends_on_task_id) && criticalPath.has(task.id)
+                  const strokeColor = isCriticalEdge ? "#ef4444" : "#71717a"
+
                   return (
                     <g key={`dep-${dep.depends_on_task_id}-${task.id}`}>
                       <path
                         d={`M ${fromX} ${fromY} L ${midX} ${fromY} L ${midX} ${toY} L ${toX} ${toY}`}
                         fill="none"
-                        stroke="#71717a"
+                        stroke={strokeColor}
                         strokeWidth={1.5}
                         strokeDasharray="4 2"
                       />
                       <polygon
                         points={`${toX},${toY} ${toX - 5},${toY - 3} ${toX - 5},${toY + 3}`}
-                        fill="#71717a"
+                        fill={strokeColor}
                       />
                     </g>
                   )

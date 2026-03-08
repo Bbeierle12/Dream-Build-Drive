@@ -57,6 +57,8 @@ export type Attachment = {
   file_size: number
   storage_path: string
   url: string
+  title: string | null
+  description: string | null
   created_at: string
 }
 

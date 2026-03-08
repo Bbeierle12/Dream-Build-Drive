@@ -145,3 +145,22 @@ export function downloadCSV(content: string, filename: string): void {
   document.body.removeChild(link)
   URL.revokeObjectURL(url)
 }
+
+export async function captureChartAsPNG(elementId: string, filename: string): Promise<void> {
+  const element = document.getElementById(elementId)
+  if (!element) return
+
+  const { default: html2canvas } = await import("html2canvas")
+  const canvas = await html2canvas(element, {
+    backgroundColor: "#09090b",
+    scale: 2,
+  })
+
+  const url = canvas.toDataURL("image/png")
+  const link = document.createElement("a")
+  link.href = url
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+}

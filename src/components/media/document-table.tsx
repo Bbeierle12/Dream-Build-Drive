@@ -41,6 +41,7 @@ export function DocumentTable({ documents, projectId }: DocumentTableProps) {
         <TableHeader>
           <TableRow>
             <TableHead>Name</TableHead>
+            <TableHead>Title</TableHead>
             <TableHead>Type</TableHead>
             <TableHead>Size</TableHead>
             <TableHead>Linked To</TableHead>
@@ -55,6 +56,13 @@ export function DocumentTable({ documents, projectId }: DocumentTableProps) {
                 <div className="flex items-center gap-2">
                   <FileText className="h-4 w-4 text-muted-foreground" />
                   <span className="font-medium">{doc.file_name}</span>
+                </div>
+              </TableCell>
+              <TableCell className="text-muted-foreground text-sm">
+                <div>
+                  {doc.title && <span className="font-medium text-zinc-200 block">{doc.title}</span>}
+                  {doc.description && <span className="text-xs">{doc.description}</span>}
+                  {!doc.title && !doc.description && "—"}
                 </div>
               </TableCell>
               <TableCell className="text-muted-foreground text-sm">

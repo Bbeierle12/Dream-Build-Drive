@@ -5,6 +5,7 @@ import type {
   Part,
   Task,
   CostSummary,
+  SpendOverTime,
 } from "@/lib/types"
 
 export function computeCategoryCostData(
@@ -66,4 +67,26 @@ export function computeBudgetHealth(
     status = "warning"
   }
   return { percentage, status }
+}
+
+export function computeBurnRate(parts: Part[]): SpendOverTime[] {
+  if (parts.length === 0) return []
+
+  // Group parts by month using created_at
+  const monthMap = new Map<string, number>()
+  for (const part of parts) {
+    const cost = part.actual_cost ?? 0
+    if (cost === 0) continue
+    const date = new Date(part.created_at)
+    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`
+    monthMap.set(key, (monthMap.get(key) ?? 0) + cost)
+  }
+
+  // Sort by month and compute cumulative
+  const sorted = Array.from(monthMap.entries()).sort(([a], [b]) => a.localeCompare(b))
+  let cumulative = 0
+  return sorted.map(([date, amount]) => {
+    cumulative += amount
+    return { date, cumulative }
+  })
 }

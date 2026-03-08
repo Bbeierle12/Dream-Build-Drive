@@ -27,6 +27,8 @@ export function UploadDropzone({ projectId, categories, parts }: UploadDropzoneP
   const [progress, setProgress] = useState(0)
   const [categoryId, setCategoryId] = useState<string>("none")
   const [partId, setPartId] = useState<string>("none")
+  const [title, setTitle] = useState("")
+  const [description, setDescription] = useState("")
 
   const filteredParts =
     categoryId === "none"
@@ -67,6 +69,8 @@ export function UploadDropzone({ projectId, categories, parts }: UploadDropzoneP
             fileSize: file.size,
             storagePath: result.path!,
             url: result.publicUrl!,
+            title: title || null,
+            description: description || null,
           })
 
           if (attachmentResult?.error) {
@@ -96,7 +100,7 @@ export function UploadDropzone({ projectId, categories, parts }: UploadDropzoneP
       setUploading(false)
       setProgress(0)
     },
-    [categoryId, partId, projectId]
+    [categoryId, partId, projectId, title, description]
   )
 
   return (
@@ -140,6 +144,23 @@ export function UploadDropzone({ projectId, categories, parts }: UploadDropzoneP
             ))}
           </SelectContent>
         </Select>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <input
+          type="text"
+          placeholder="Title (optional)"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        />
+        <input
+          type="text"
+          placeholder="Description (optional)"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        />
       </div>
 
       <div

@@ -1,15 +1,24 @@
 import { cn } from "@/lib/utils"
-import { Flag } from "lucide-react"
+import { Flag, AlertTriangle, Link2 } from "lucide-react"
 import { PRIORITY_COLORS } from "@/lib/constants"
-import type { Task } from "@/lib/types"
+import type { TaskWithDependencies } from "@/lib/types"
 import type { CalendarDay } from "@/lib/calendar-utils"
 
 type CalendarDayCellProps = {
   day: CalendarDay
-  tasks: Task[]
+  tasks: TaskWithDependencies[]
+  allTasks?: TaskWithDependencies[]
 }
 
-export function CalendarDayCell({ day, tasks }: CalendarDayCellProps) {
+function isBlocked(task: TaskWithDependencies, allTasks: TaskWithDependencies[]): boolean {
+  if (task.dependencies.length === 0) return false
+  return task.dependencies.some((dep) => {
+    const blocker = allTasks.find((t) => t.id === dep.depends_on_task_id)
+    return blocker && blocker.status !== "done"
+  })
+}
+
+export function CalendarDayCell({ day, tasks, allTasks }: CalendarDayCellProps) {
   return (
     <div
       className={cn(
@@ -37,6 +46,12 @@ export function CalendarDayCell({ day, tasks }: CalendarDayCellProps) {
           >
             <span className="flex items-center gap-0.5">
               {task.is_milestone && <Flag className="h-2.5 w-2.5 shrink-0" />}
+              {allTasks && isBlocked(task, allTasks) && (
+                <AlertTriangle className="h-2.5 w-2.5 shrink-0 text-amber-400" />
+              )}
+              {task.dependencies.length > 0 && !isBlocked(task, allTasks ?? []) && (
+                <Link2 className="h-2.5 w-2.5 shrink-0 text-zinc-500" />
+              )}
               {task.title}
             </span>
           </div>

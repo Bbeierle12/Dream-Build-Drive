@@ -40,6 +40,8 @@ export async function createAttachment({
   fileSize,
   storagePath,
   url,
+  title,
+  description,
 }: {
   projectId: string
   categoryId?: string | null
@@ -49,6 +51,8 @@ export async function createAttachment({
   fileSize: number
   storagePath: string
   url: string
+  title?: string | null
+  description?: string | null
 }) {
   const supabase = createClient()
 
@@ -61,6 +65,8 @@ export async function createAttachment({
     file_size: fileSize,
     storage_path: storagePath,
     url,
+    title: title || null,
+    description: description || null,
   })
 
   if (error) {

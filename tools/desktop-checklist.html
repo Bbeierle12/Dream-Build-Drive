@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DBD Checklist</title>
+    <style>
+      :root {
+        --bg: #0b0d10;
+        --panel: #15191f;
+        --panel-2: #1c2129;
+        --border: #2a313c;
+        --text: #f2f4f8;
+        --muted: #a7b0bf;
+        --accent: #c0392b;
+        --accent-soft: rgba(192, 57, 43, 0.18);
+        --success: #2ecc71;
+        --danger: #ef4444;
+        --shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+        --radius: 14px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        background:
+          radial-gradient(circle at top left, rgba(192, 57, 43, 0.14), transparent 28%),
+          radial-gradient(circle at top right, rgba(255, 255, 255, 0.05), transparent 24%),
+          linear-gradient(180deg, #0a0c0f 0%, #10141a 100%);
+        color: var(--text);
+        font-family: "Space Grotesk", "Segoe UI", sans-serif;
+      }
+
+      body {
+        padding: 28px;
+      }
+
+      .app {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: grid;
+        gap: 20px;
+      }
+
+      .panel {
+        background: linear-gradient(180deg, rgba(28, 33, 41, 0.95), rgba(21, 25, 31, 0.98));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+      }
+
+      .hero {
+        padding: 26px;
+        display: grid;
+        gap: 18px;
+      }
+
+      .title-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .title-input {
+        width: min(100%, 560px);
+        border: 1px solid transparent;
+        background: transparent;
+        color: var(--text);
+        font-size: clamp(1.7rem, 3vw, 2.8rem);
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        padding: 0;
+        outline: none;
+      }
+
+      .title-input:focus {
+        border-bottom: 1px solid var(--accent);
+      }
+
+      .subtext {
+        color: var(--muted);
+        font-size: 0.98rem;
+      }
+
+      .toolbar,
+      .stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .button,
+      .ghost-button,
+      .danger-button,
+      .mini-button,
+      .import-label {
+        appearance: none;
+        border: 1px solid var(--border);
+        background: var(--panel-2);
+        color: var(--text);
+        border-radius: 999px;
+        cursor: pointer;
+        font: inherit;
+        transition: 140ms ease;
+      }
+
+      .button,
+      .ghost-button,
+      .danger-button,
+      .import-label {
+        padding: 10px 15px;
+      }
+
+      .mini-button {
+        padding: 6px 10px;
+        font-size: 0.86rem;
+      }
+
+      .button:hover,
+      .ghost-button:hover,
+      .danger-button:hover,
+      .mini-button:hover,
+      .import-label:hover {
+        transform: translateY(-1px);
+        border-color: #495365;
+      }
+
+      .button {
+        background: linear-gradient(180deg, #d24c3f, #b73125);
+        border-color: #b73125;
+      }
+
+      .ghost-button {
+        background: rgba(255, 255, 255, 0.02);
+      }
+
+      .danger-button {
+        background: rgba(239, 68, 68, 0.12);
+        color: #ffd6d6;
+      }
+
+      .import-label input {
+        display: none;
+      }
+
+      .stat-chip {
+        min-width: 120px;
+        padding: 14px 16px;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      .stat-label {
+        color: var(--muted);
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .stat-value {
+        margin-top: 4px;
+        font-size: 1.35rem;
+        font-weight: 700;
+      }
+
+      .workspace {
+        padding: 20px;
+      }
+
+      .empty-state {
+        padding: 36px 24px;
+        text-align: center;
+        color: var(--muted);
+        border: 1px dashed var(--border);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.02);
+      }
+
+      .tree {
+        display: grid;
+        gap: 12px;
+      }
+
+      .node {
+        display: grid;
+        gap: 10px;
+      }
+
+      .node-children {
+        margin-left: 26px;
+        padding-left: 18px;
+        border-left: 1px solid rgba(255, 255, 255, 0.08);
+        display: grid;
+        gap: 12px;
+      }
+
+      .node-row {
+        display: grid;
+        grid-template-columns: auto auto 1fr auto;
+        gap: 10px;
+        align-items: center;
+        padding: 12px;
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.025);
+      }
+
+      .node-row.depth-0 {
+        background: linear-gradient(180deg, rgba(192, 57, 43, 0.12), rgba(255, 255, 255, 0.025));
+      }
+
+      .toggle-button {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--muted);
+        cursor: pointer;
+      }
+
+      .toggle-button[disabled] {
+        cursor: default;
+        opacity: 0.35;
+      }
+
+      .check-wrap {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .checkbox {
+        width: 20px;
+        height: 20px;
+        accent-color: var(--accent);
+      }
+
+      .node-main {
+        display: grid;
+        gap: 8px;
+      }
+
+      .node-title {
+        width: 100%;
+        border: none;
+        background: transparent;
+        color: var(--text);
+        font: inherit;
+        font-size: 1rem;
+        font-weight: 600;
+        outline: none;
+      }
+
+      .node-title:focus {
+        background: rgba(255, 255, 255, 0.04);
+        border-radius: 8px;
+      }
+
+      .node-row.depth-0 .node-title {
+        font-size: 1.04rem;
+      }
+
+      .node-row.checked .node-title {
+        color: var(--muted);
+        text-decoration: line-through;
+      }
+
+      .meta-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .badge {
+        padding: 3px 8px;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: var(--muted);
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      .progress-bar {
+        position: relative;
+        width: 120px;
+        height: 8px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        overflow: hidden;
+      }
+
+      .progress-fill {
+        position: absolute;
+        inset: 0 auto 0 0;
+        height: 100%;
+        background: linear-gradient(90deg, var(--accent), var(--success));
+        border-radius: inherit;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: flex-end;
+      }
+
+      .footer-note {
+        padding: 0 2px;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      @media (max-width: 880px) {
+        body {
+          padding: 16px;
+        }
+
+        .node-row {
+          grid-template-columns: auto auto 1fr;
+        }
+
+        .actions {
+          grid-column: 1 / -1;
+          justify-content: flex-start;
+        }
+
+        .node-children {
+          margin-left: 12px;
+          padding-left: 12px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <section class="panel hero">
+        <div class="title-row">
+          <input id="plan-title" class="title-input" type="text" value="Build Checklist" />
+          <div class="toolbar">
+            <button id="add-root" class="button" type="button">Add Main Category</button>
+            <button id="expand-all" class="ghost-button" type="button">Expand All</button>
+            <button id="collapse-all" class="ghost-button" type="button">Collapse All</button>
+            <button id="export-json" class="ghost-button" type="button">Export JSON</button>
+            <label class="import-label" for="import-json">Import JSON
+              <input id="import-json" type="file" accept="application/json" />
+            </label>
+            <button id="reset-app" class="danger-button" type="button">Reset</button>
+          </div>
+        </div>
+
+        <div class="subtext">
+          Desktop checklist app for planning and build sessions. It autosaves in your browser and supports unlimited nested categories and tasks.
+        </div>
+
+        <div class="stats">
+          <div class="stat-chip">
+            <div class="stat-label">Total Items</div>
+            <div id="total-items" class="stat-value">0</div>
+          </div>
+          <div class="stat-chip">
+            <div class="stat-label">Completed</div>
+            <div id="completed-items" class="stat-value">0</div>
+          </div>
+          <div class="stat-chip">
+            <div class="stat-label">Progress</div>
+            <div id="progress-percent" class="stat-value">0%</div>
+          </div>
+          <div class="stat-chip">
+            <div class="stat-label">Last Saved</div>
+            <div id="last-saved" class="stat-value">Never</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel workspace">
+        <div id="tree-root" class="tree"></div>
+        <div id="empty-state" class="empty-state" hidden>
+          No checklist items yet. Start with a main category, then add as many subitems as you need.
+        </div>
+      </section>
+
+      <div class="footer-note">
+        Tip: use main categories for phases or systems, then add child items for every task, dependency, or validation checkpoint.
+      </div>
+    </div>
+
+    <script>
+      const STORAGE_KEY = "dbd-desktop-checklist-v1";
+
+      function createId() {
+        return `${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
+      }
+
+      function createNode(title = "New Item") {
+        return {
+          id: createId(),
+          title,
+          checked: false,
+          collapsed: false,
+          children: [],
+        };
+      }
+
+      function createDefaultState() {
+        return {
+          title: "Build Checklist",
+          lastSavedAt: null,
+          items: [
+            {
+              ...createNode("Planning"),
+              children: [
+                createNode("Review roadmap"),
+                createNode("Break work into milestones"),
+                createNode("Confirm dependencies and blockers"),
+              ],
+            },
+            {
+              ...createNode("Implementation"),
+              children: [
+                createNode("Schema and data model"),
+                createNode("UI and workflows"),
+                createNode("Tests and validation"),
+              ],
+            },
+            {
+              ...createNode("Release"),
+              children: [
+                createNode("Documentation"),
+                createNode("Final QA"),
+                createNode("Deployment readiness"),
+              ],
+            },
+          ],
+        };
+      }
+
+      function loadState() {
+        try {
+          const raw = window.localStorage.getItem(STORAGE_KEY);
+          if (!raw) return createDefaultState();
+          const parsed = JSON.parse(raw);
+          if (!parsed || !Array.isArray(parsed.items)) return createDefaultState();
+          return parsed;
+        } catch {
+          return createDefaultState();
+        }
+      }
+
+      const state = loadState();
+
+      const els = {
+        planTitle: document.getElementById("plan-title"),
+        treeRoot: document.getElementById("tree-root"),
+        emptyState: document.getElementById("empty-state"),
+        totalItems: document.getElementById("total-items"),
+        completedItems: document.getElementById("completed-items"),
+        progressPercent: document.getElementById("progress-percent"),
+        lastSaved: document.getElementById("last-saved"),
+        addRoot: document.getElementById("add-root"),
+        expandAll: document.getElementById("expand-all"),
+        collapseAll: document.getElementById("collapse-all"),
+        exportJson: document.getElementById("export-json"),
+        importJson: document.getElementById("import-json"),
+        resetApp: document.getElementById("reset-app"),
+      };
+
+      function formatSavedTime(value) {
+        if (!value) return "Never";
+        const date = new Date(value);
+        return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], {
+          hour: "numeric",
+          minute: "2-digit",
+        })}`;
+      }
+
+      function saveState() {
+        state.lastSavedAt = new Date().toISOString();
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      }
+
+      function walkNodes(nodes, fn, parent = null) {
+        for (const node of nodes) {
+          fn(node, parent);
+          if (node.children.length > 0) {
+            walkNodes(node.children, fn, node);
+          }
+        }
+      }
+
+      function countItems(nodes) {
+        let total = 0;
+        let completed = 0;
+        walkNodes(nodes, (node) => {
+          total += 1;
+          if (node.checked) completed += 1;
+        });
+        return { total, completed };
+      }
+
+      function branchCounts(node) {
+        let total = 1;
+        let completed = node.checked ? 1 : 0;
+        for (const child of node.children) {
+          const childCounts = branchCounts(child);
+          total += childCounts.total;
+          completed += childCounts.completed;
+        }
+        return { total, completed };
+      }
+
+      function findNodeAndParent(id, nodes = state.items, parent = null) {
+        for (let index = 0; index < nodes.length; index += 1) {
+          const node = nodes[index];
+          if (node.id === id) {
+            return { node, parent, index, siblings: nodes };
+          }
+          const nested = findNodeAndParent(id, node.children, node);
+          if (nested) return nested;
+        }
+        return null;
+      }
+
+      function setCheckedRecursive(node, checked) {
+        node.checked = checked;
+        for (const child of node.children) {
+          setCheckedRecursive(child, checked);
+        }
+      }
+
+      function setCollapsedRecursive(nodes, collapsed) {
+        for (const node of nodes) {
+          node.collapsed = collapsed;
+          setCollapsedRecursive(node.children, collapsed);
+        }
+      }
+
+      function triggerRender() {
+        saveState();
+        render();
+      }
+
+      function buildActionButton(label, className, handler) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = className;
+        button.textContent = label;
+        button.addEventListener("click", handler);
+        return button;
+      }
+
+      function renderNode(node, depth = 0) {
+        const wrapper = document.createElement("div");
+        wrapper.className = "node";
+
+        const row = document.createElement("div");
+        row.className = `node-row depth-${depth}${node.checked ? " checked" : ""}`;
+
+        const toggleButton = document.createElement("button");
+        toggleButton.type = "button";
+        toggleButton.className = "toggle-button";
+        toggleButton.textContent = node.children.length > 0 ? (node.collapsed ? "+" : "-") : ".";
+        toggleButton.disabled = node.children.length === 0;
+        toggleButton.addEventListener("click", () => {
+          node.collapsed = !node.collapsed;
+          triggerRender();
+        });
+
+        const checkWrap = document.createElement("label");
+        checkWrap.className = "check-wrap";
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.className = "checkbox";
+        checkbox.checked = node.checked;
+        checkbox.addEventListener("change", (event) => {
+          setCheckedRecursive(node, event.target.checked);
+          triggerRender();
+        });
+        checkWrap.appendChild(checkbox);
+
+        const main = document.createElement("div");
+        main.className = "node-main";
+
+        const titleInput = document.createElement("input");
+        titleInput.type = "text";
+        titleInput.className = "node-title";
+        titleInput.value = node.title;
+        titleInput.placeholder = depth === 0 ? "Main category" : "Checklist item";
+        titleInput.addEventListener("input", (event) => {
+          node.title = event.target.value;
+          saveState();
+          updateStats();
+        });
+
+        const meta = document.createElement("div");
+        meta.className = "meta-row";
+
+        const counts = branchCounts(node);
+        const badge = document.createElement("div");
+        badge.className = "badge";
+        badge.textContent = `${counts.completed}/${counts.total} complete`;
+
+        const progressBar = document.createElement("div");
+        progressBar.className = "progress-bar";
+        const progressFill = document.createElement("div");
+        progressFill.className = "progress-fill";
+        progressFill.style.width = `${counts.total === 0 ? 0 : (counts.completed / counts.total) * 100}%`;
+        progressBar.appendChild(progressFill);
+
+        meta.appendChild(badge);
+        meta.appendChild(progressBar);
+
+        main.appendChild(titleInput);
+        main.appendChild(meta);
+
+        const actions = document.createElement("div");
+        actions.className = "actions";
+        actions.appendChild(
+          buildActionButton("Add Child", "mini-button", () => {
+            node.children.push(createNode(depth === 0 ? "New Subcategory" : "New Subitem"));
+            node.collapsed = false;
+            triggerRender();
+          })
+        );
+        actions.appendChild(
+          buildActionButton("Duplicate", "mini-button", () => {
+            const target = findNodeAndParent(node.id);
+            if (!target) return;
+            const clone = JSON.parse(JSON.stringify(node));
+            walkNodes([clone], (child) => {
+              child.id = createId();
+            });
+            target.siblings.splice(target.index + 1, 0, clone);
+            triggerRender();
+          })
+        );
+        actions.appendChild(
+          buildActionButton("Delete", "mini-button", () => {
+            const target = findNodeAndParent(node.id);
+            if (!target) return;
+            target.siblings.splice(target.index, 1);
+            triggerRender();
+          })
+        );
+
+        row.appendChild(toggleButton);
+        row.appendChild(checkWrap);
+        row.appendChild(main);
+        row.appendChild(actions);
+        wrapper.appendChild(row);
+
+        if (node.children.length > 0 && !node.collapsed) {
+          const childWrap = document.createElement("div");
+          childWrap.className = "node-children";
+          for (const child of node.children) {
+            childWrap.appendChild(renderNode(child, depth + 1));
+          }
+          wrapper.appendChild(childWrap);
+        }
+
+        return wrapper;
+      }
+
+      function updateStats() {
+        const counts = countItems(state.items);
+        const percent = counts.total === 0 ? 0 : Math.round((counts.completed / counts.total) * 100);
+        els.totalItems.textContent = String(counts.total);
+        els.completedItems.textContent = String(counts.completed);
+        els.progressPercent.textContent = `${percent}%`;
+        els.lastSaved.textContent = formatSavedTime(state.lastSavedAt);
+        els.planTitle.value = state.title;
+      }
+
+      function render() {
+        els.treeRoot.innerHTML = "";
+        updateStats();
+
+        if (state.items.length === 0) {
+          els.emptyState.hidden = false;
+          return;
+        }
+
+        els.emptyState.hidden = true;
+        for (const node of state.items) {
+          els.treeRoot.appendChild(renderNode(node, 0));
+        }
+      }
+
+      els.planTitle.addEventListener("input", (event) => {
+        state.title = event.target.value;
+        triggerRender();
+      });
+
+      els.addRoot.addEventListener("click", () => {
+        state.items.push(createNode("New Main Category"));
+        triggerRender();
+      });
+
+      els.expandAll.addEventListener("click", () => {
+        setCollapsedRecursive(state.items, false);
+        triggerRender();
+      });
+
+      els.collapseAll.addEventListener("click", () => {
+        setCollapsedRecursive(state.items, true);
+        triggerRender();
+      });
+
+      els.exportJson.addEventListener("click", () => {
+        const blob = new Blob([JSON.stringify(state, null, 2)], {
+          type: "application/json",
+        });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        const safeTitle = (state.title || "dbd-checklist")
+          .trim()
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-+|-+$/g, "");
+        link.href = url;
+        link.download = `${safeTitle || "dbd-checklist"}.json`;
+        link.click();
+        URL.revokeObjectURL(url);
+      });
+
+      els.importJson.addEventListener("change", async (event) => {
+        const file = event.target.files && event.target.files[0];
+        if (!file) return;
+
+        try {
+          const text = await file.text();
+          const parsed = JSON.parse(text);
+          if (!parsed || !Array.isArray(parsed.items)) {
+            throw new Error("Invalid checklist file");
+          }
+          state.title = typeof parsed.title === "string" ? parsed.title : "Imported Checklist";
+          state.items = parsed.items;
+          state.lastSavedAt = null;
+          triggerRender();
+        } catch (error) {
+          window.alert(error instanceof Error ? error.message : "Could not import file");
+        } finally {
+          event.target.value = "";
+        }
+      });
+
+      els.resetApp.addEventListener("click", () => {
+        const confirmed = window.confirm(
+          "Reset the checklist app? This clears the current working checklist from browser storage."
+        );
+        if (!confirmed) return;
+        const fresh = createDefaultState();
+        state.title = fresh.title;
+        state.items = fresh.items;
+        state.lastSavedAt = null;
+        triggerRender();
+      });
+
+      render();
+    </script>
+  </body>
+</html>

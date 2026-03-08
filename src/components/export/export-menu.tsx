@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useCallback, useEffect } from "react"
-import { Download, FileSpreadsheet, Printer, Loader2 } from "lucide-react"
+import { Download, FileSpreadsheet, Printer, Loader2, ImageIcon } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import {
@@ -25,6 +25,7 @@ import {
   specsToCSV,
   costSummaryToCSV,
   downloadCSV,
+  captureChartAsPNG,
 } from "@/lib/export-utils"
 import { PrintReport } from "./print-report"
 import { reportError } from "@/lib/error-reporting"
@@ -167,6 +168,29 @@ export function ExportMenu({ projectId }: Props) {
             )
             break
           }
+          case "charts": {
+            const project = await getExportProjectInfo(projectId)
+            const slug = slugifyProjectName(project.name)
+            const date = new Date().toISOString().slice(0, 10)
+
+            // Capture all chart elements that exist on the page
+            const chartIds = ["chart-burn-rate", "chart-cross-project"]
+            let exported = 0
+            for (const id of chartIds) {
+              const el = document.getElementById(id)
+              if (el) {
+                await captureChartAsPNG(id, `${slug}-${id}-${date}.png`)
+                exported++
+              }
+            }
+
+            if (exported === 0) {
+              toast.error("No charts found on this page to export")
+            } else {
+              toast.success(`Exported ${exported} chart${exported === 1 ? "" : "s"} as PNG`)
+            }
+            break
+          }
           case "print": {
             const [project, categories, tasks, specs] = await Promise.all([
               getExportProjectInfo(projectId),
@@ -236,6 +260,10 @@ export function ExportMenu({ projectId }: Props) {
           <DropdownMenuItem onClick={() => handleExport("print")}>
             <Printer className="mr-2 h-4 w-4" />
             Print Report (PDF)
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleExport("charts")}>
+            <ImageIcon className="mr-2 h-4 w-4" />
+            Export Charts (PNG)
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

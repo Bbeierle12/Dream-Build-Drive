@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { ChevronLeft, ChevronRight, Flag, AlertTriangle, Link2 } from "lucide-react"
 import { CALENDAR_CONFIG } from "@/lib/constants"
 import {
   generateMonthGrid,
@@ -10,10 +10,10 @@ import {
   taskSpansDate,
 } from "@/lib/calendar-utils"
 import { CalendarDayCell } from "./calendar-day-cell"
-import type { Task } from "@/lib/types"
+import type { TaskWithDependencies } from "@/lib/types"
 
 type CalendarViewProps = {
-  tasks: Task[]
+  tasks: TaskWithDependencies[]
 }
 
 const MONTH_NAMES = [
@@ -115,6 +115,12 @@ export function CalendarView({ tasks }: CalendarViewProps) {
         </div>
       </div>
 
+      <div className="flex items-center gap-4 text-[10px] text-muted-foreground">
+        <span className="flex items-center gap-1"><Flag className="h-3 w-3" /> Milestone</span>
+        <span className="flex items-center gap-1"><AlertTriangle className="h-3 w-3 text-amber-400" /> Blocked</span>
+        <span className="flex items-center gap-1"><Link2 className="h-3 w-3 text-zinc-500" /> Has Dependencies</span>
+      </div>
+
       <div>
         <div className="grid grid-cols-7 mb-1">
           {CALENDAR_CONFIG.WEEK_DAYS.map((d) => (
@@ -132,7 +138,7 @@ export function CalendarView({ tasks }: CalendarViewProps) {
               taskSpansDate(t.start_date, t.due_date, day.dateStr)
             )
             return (
-              <CalendarDayCell key={day.dateStr} day={day} tasks={dayTasks} />
+              <CalendarDayCell key={day.dateStr} day={day} tasks={dayTasks} allTasks={tasks} />
             )
           })}
         </div>

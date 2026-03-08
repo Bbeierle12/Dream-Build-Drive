@@ -190,3 +190,31 @@ export async function applyAllTemplates(
   revalidatePath(`/projects/${projectId}`)
   return { applied: inserts.length }
 }
+
+export async function getSpecsForContext(
+  projectId: string,
+  categoryId?: string | null,
+  partId?: string | null,
+) {
+  if (!categoryId && !partId) return { data: [] }
+
+  const supabase = createClient()
+  let query = supabase
+    .from("specifications")
+    .select("id, label, value, unit, spec_type")
+    .eq("project_id", projectId)
+
+  if (categoryId && partId) {
+    // Get specs for either the category or the specific part
+    query = query.or(`category_id.eq.${categoryId},part_id.eq.${partId}`)
+  } else if (categoryId) {
+    query = query.eq("category_id", categoryId)
+  } else if (partId) {
+    query = query.eq("part_id", partId)
+  }
+
+  const { data, error } = await query.order("label").limit(10)
+
+  if (error) return { data: [] }
+  return { data: data ?? [] }
+}

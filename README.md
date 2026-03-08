@@ -75,7 +75,12 @@ Open `http://localhost:3000`.
 - `src/lib`: shared utilities, types, constants, and Supabase clients
 - `src/__tests__`: unit tests
 - `docs/roadmap.md`: formal product roadmap and phase plan
+- `docs/roadmap-audit-checklist.md`: implementation audit of roadmap items vs repo state
+- `docs/session-tracker.md`: usage guide for the desktop checklist and true AI session tracker
 - `FUTURE.md`: deferred backlog outside the active phase
+- `tools/desktop-checklist.html`: standalone desktop checklist app for planning/build sessions
+- `tools/desktop_checklist.py`: native Python desktop checklist app with autosave, sessions, and nested items
+- `tools/register_ai_session.py`: CLI helper to log Codex, Claude, Ollama, or other AI sessions into the desktop app store
 - `supabase/migrations`: schema and policy migrations
 
 ## Data Model Overview

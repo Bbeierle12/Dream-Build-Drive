@@ -3,6 +3,8 @@ import { Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { StatCards } from "@/components/dashboard/stat-cards"
 import { ProjectListTable } from "@/components/dashboard/project-list-table"
+import { CrossProjectCharts } from "@/components/dashboard/cross-project-charts"
+import { computeBudgetHealth } from "@/lib/analytics-utils"
 import { createClient } from "@/lib/supabase/server"
 
 export default async function GarageDashboard() {
@@ -38,6 +40,19 @@ export default async function GarageDashboard() {
   )
   const totalParts = (parts ?? []).length
 
+  const projectData = projectList
+    .filter((p) => p.totalSpend > 0 || (p.budget ?? 0) > 0)
+    .map((p) => ({
+      name: p.name,
+      spend: p.totalSpend,
+      budget: p.budget ?? 0,
+    }))
+
+  const overallHealth = computeBudgetHealth(
+    { projected: 0, actual: totalSpend, purchased: 0, planned: 0, overUnder: 0 },
+    totalBudget
+  )
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -65,6 +80,18 @@ export default async function GarageDashboard() {
         <h2 className="mb-4 text-xl font-semibold">Your Builds</h2>
         <ProjectListTable projects={projectList} />
       </div>
+
+      {projectData.length > 0 && (
+        <div>
+          <h2 className="mb-4 text-xl font-semibold">Cross-Project Analytics</h2>
+          <CrossProjectCharts
+            projectData={projectData}
+            overallHealth={overallHealth}
+            totalSpend={totalSpend}
+            totalBudget={totalBudget}
+          />
+        </div>
+      )}
     </div>
   )
 }

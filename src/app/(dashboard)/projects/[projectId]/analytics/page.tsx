@@ -7,12 +7,14 @@ import {
   computeStatusDistribution,
   computeTaskStatusDistribution,
   computeBudgetHealth,
+  computeBurnRate,
 } from "@/lib/analytics-utils"
 import { SpendSummaryCards } from "@/components/analytics/spend-summary-cards"
 import { CostByCategoryChart } from "@/components/analytics/cost-by-category-chart"
 import { BudgetGauge } from "@/components/analytics/budget-gauge"
 import { StatusPieChart } from "@/components/analytics/status-pie-chart"
 import { TaskCompletionChart } from "@/components/analytics/task-completion-chart"
+import { BurnRateChart } from "@/components/analytics/burn-rate-chart"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { CategoryWithParts } from "@/lib/types"
@@ -78,6 +80,7 @@ export default async function AnalyticsPage({
   const partStatusData = computeStatusDistribution(parts)
   const taskStatusData = computeTaskStatusDistribution(tasks)
   const budgetHealth = computeBudgetHealth(costs, project.budget ?? 0)
+  const burnRateData = computeBurnRate(parts)
 
   return (
     <div className="space-y-6">
@@ -136,6 +139,8 @@ export default async function AnalyticsPage({
         <StatusPieChart data={partStatusData} title="Part Status" />
         <TaskCompletionChart data={taskStatusData} />
       </div>
+
+      <BurnRateChart data={burnRateData} />
     </div>
   )
 }

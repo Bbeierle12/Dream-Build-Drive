@@ -4,9 +4,23 @@ import { useState, useTransition } from "react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { SpecTypeBadge } from "./spec-type-badge"
-import { applySpecTemplate, applyAllTemplates } from "@/actions/specs"
+import { applySpecTemplate, applyAllTemplates, getSpecTemplates } from "@/actions/specs"
 import { Check, Download, Loader2 } from "lucide-react"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import type { SpecTemplate, Specification, Category } from "@/lib/types"
+
+const VEHICLE_PLATFORMS = [
+  { value: "universal", label: "Universal" },
+  { value: "classic-muscle", label: "Classic Muscle" },
+  { value: "modern-efi", label: "Modern EFI" },
+  { value: "diesel-truck", label: "Diesel Truck" },
+]
 
 type TemplateBrowserProps = {
   templates: SpecTemplate[]
@@ -51,8 +65,10 @@ export function TemplateBrowser({
 }: TemplateBrowserProps) {
   const [isPending, startTransition] = useTransition()
   const [appliedIds, setAppliedIds] = useState<Set<string>>(new Set())
+  const [platform, setPlatform] = useState("universal")
+  const [displayTemplates, setDisplayTemplates] = useState(templates)
 
-  const grouped = groupTemplates(templates)
+  const grouped = groupTemplates(displayTemplates)
   const categoryMap = new Map(
     categories.map((c) => [c.name.toLowerCase(), c.id])
   )
@@ -89,7 +105,7 @@ export function TemplateBrowser({
     })
   }
 
-  if (templates.length === 0) {
+  if (displayTemplates.length === 0 && platform === "universal") {
     return (
       <div className="rounded-md border p-8 text-center text-muted-foreground">
         No templates available.
@@ -99,10 +115,35 @@ export function TemplateBrowser({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          Apply universal spec templates to your project categories.
-        </p>
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <Select
+            value={platform}
+            onValueChange={(value) => {
+              setPlatform(value)
+              startTransition(async () => {
+                const result = await getSpecTemplates(value)
+                if (result.data) {
+                  setDisplayTemplates(result.data)
+                }
+              })
+            }}
+          >
+            <SelectTrigger className="w-[160px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {VEHICLE_PLATFORMS.map((p) => (
+                <SelectItem key={p.value} value={p.value}>
+                  {p.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-sm text-muted-foreground hidden sm:block">
+            Apply spec templates to your project categories.
+          </p>
+        </div>
         <Button
           size="sm"
           onClick={handleApplyAll}
