@@ -3,7 +3,21 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { signout } from "@/actions/auth"
-import { LayoutDashboard, LogOut, Wrench, Car } from "lucide-react"
+import {
+  LayoutDashboard,
+  LogOut,
+  Wrench,
+  Car,
+  Settings,
+  ChevronRight,
+  Package,
+  ListTodo,
+  Columns3,
+  CalendarDays,
+  GanttChart,
+  Image,
+  BarChart3,
+} from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Separator } from "@/components/ui/separator"
 
@@ -11,8 +25,25 @@ type AppSidebarProps = {
   projects?: { id: string; name: string }[]
 }
 
+const PROJECT_NAV = [
+  { suffix: "", label: "Overview", icon: LayoutDashboard },
+  { suffix: "/parts", label: "Parts", icon: Package },
+  { suffix: "/tasks", label: "Tasks", icon: ListTodo },
+  { suffix: "/tasks/kanban", label: "Kanban", icon: Columns3 },
+  { suffix: "/tasks/calendar", label: "Calendar", icon: CalendarDays },
+  { suffix: "/tasks/gantt", label: "Gantt", icon: GanttChart },
+  { suffix: "/media", label: "Media", icon: Image },
+  { suffix: "/specs", label: "Specs", icon: Wrench },
+  { suffix: "/analytics", label: "Analytics", icon: BarChart3 },
+  { suffix: "/settings", label: "Settings", icon: Settings },
+]
+
 export function AppSidebar({ projects = [] }: AppSidebarProps) {
   const pathname = usePathname()
+
+  const activeProjectId = projects.find((p) =>
+    pathname.startsWith(`/projects/${p.id}`)
+  )?.id
 
   return (
     <aside className="flex h-full w-64 flex-col border-r border-border bg-card">
@@ -42,21 +73,58 @@ export function AppSidebar({ projects = [] }: AppSidebarProps) {
               Builds
             </p>
             {projects.map((project) => {
-              const isActive = pathname.startsWith(`/projects/${project.id}`)
+              const isExpanded = project.id === activeProjectId
+              const projectBase = `/projects/${project.id}`
+
               return (
-                <Link
-                  key={project.id}
-                  href={`/projects/${project.id}`}
-                  className={cn(
-                    "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors min-h-[44px]",
-                    isActive
-                      ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                <div key={project.id}>
+                  <Link
+                    href={projectBase}
+                    className={cn(
+                      "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors min-h-[44px]",
+                      isExpanded
+                        ? "bg-primary/10 text-primary"
+                        : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                    )}
+                  >
+                    <ChevronRight
+                      className={cn(
+                        "h-4 w-4 shrink-0 transition-transform duration-200",
+                        isExpanded && "rotate-90"
+                      )}
+                    />
+                    <Car className="h-4 w-4 shrink-0" />
+                    <span className="truncate">{project.name}</span>
+                  </Link>
+
+                  {isExpanded && (
+                    <div className="ml-4 border-l border-border pl-2 mt-1 mb-2 space-y-0.5">
+                      {PROJECT_NAV.map((item) => {
+                        const href = `${projectBase}${item.suffix}`
+                        const Icon = item.icon
+                        const isActive =
+                          item.suffix === ""
+                            ? pathname === projectBase
+                            : pathname === href || pathname.startsWith(href + "/")
+                        return (
+                          <Link
+                            key={item.suffix}
+                            href={href}
+                            className={cn(
+                              "flex items-center gap-3 rounded-md px-3 py-1.5 text-sm transition-colors min-h-[36px]",
+                              isActive
+                                ? "text-primary font-medium"
+                                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                            )}
+                          >
+                            <Icon className="h-3.5 w-3.5" />
+                            {item.label}
+                          </Link>
+                        )
+                      })}
+                    </div>
                   )}
-                >
-                  <Car className="h-4 w-4" />
-                  <span className="truncate">{project.name}</span>
-                </Link>
+                </div>
               )
             })}
           </>
