@@ -65,6 +65,9 @@ describe("auth actions", () => {
       expect(mockSupabase.auth.signUp).toHaveBeenCalledWith({
         email: "new@example.com",
         password: "password123",
+        options: {
+          emailRedirectTo: "http://localhost:3000/auth/callback",
+        },
       })
       expect(revalidatePath).toHaveBeenCalledWith("/", "layout")
       expect(redirect).toHaveBeenCalledWith(
