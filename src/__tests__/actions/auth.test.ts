@@ -10,7 +10,6 @@ vi.mock("@/lib/supabase/server", () => ({
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
-import { headers } from "next/headers"
 import { login, signup, signout } from "@/actions/auth"
 
 function makeFormData(fields: Record<string, string>): FormData {
