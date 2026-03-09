@@ -31,17 +31,26 @@ export async function signup(formData: FormData) {
     password: formData.get("password") as string,
   }
 
-  const origin = headers().get("origin") ?? ""
+  const origin = headers().get("origin")
+  const host = headers().get("host")
+  const proto = headers().get("x-forwarded-proto") ?? "https"
+  const baseUrl = origin || `${proto}://${host}`
 
-  const { error } = await supabase.auth.signUp({
+  const { data: signUpData, error } = await supabase.auth.signUp({
     ...data,
     options: {
-      emailRedirectTo: `${origin}/auth/callback`,
+      emailRedirectTo: `${baseUrl}/auth/callback`,
     },
   })
 
   if (error) {
     redirect("/signup?error=" + encodeURIComponent(error.message))
+  }
+
+  // Supabase returns a user with empty identities when the email already exists
+  // but doesn't surface it as an error
+  if (signUpData?.user?.identities?.length === 0) {
+    redirect("/signup?error=" + encodeURIComponent("An account with this email already exists"))
   }
 
   revalidatePath("/", "layout")
