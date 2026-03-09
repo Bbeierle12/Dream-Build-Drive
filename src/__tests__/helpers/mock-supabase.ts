@@ -123,5 +123,8 @@ export function setupServerActionMocks() {
       getAll: vi.fn().mockReturnValue([]),
       set: vi.fn(),
     }),
+    headers: vi.fn().mockReturnValue({
+      get: vi.fn().mockReturnValue("http://localhost:3000"),
+    }),
   }))
 }
