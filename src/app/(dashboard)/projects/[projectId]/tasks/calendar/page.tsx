@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server"
 import { notFound } from "next/navigation"
 import { CalendarView } from "@/components/tasks/calendar-view"
 import { TaskForm } from "@/components/tasks/task-form"
+import type { TaskWithDependencies, TaskDependency } from "@/lib/types"
 
 export default async function CalendarPage({
   params,
@@ -18,7 +19,7 @@ export default async function CalendarPage({
 
   if (!project) notFound()
 
-  const [{ data: categories }, { data: parts }, { data: tasks }, { data: dependencies }] =
+  const [{ data: categories }, { data: parts }, { data: rawTasks }, { data: deps }] =
     await Promise.all([
       supabase
         .from("categories")
@@ -40,11 +41,22 @@ export default async function CalendarPage({
         .select("*"),
     ])
 
-  const taskList = tasks ?? []
-  const taskIds = new Set(taskList.map((task) => task.id))
-  const scopedDependencies = (dependencies ?? []).filter(
-    (dependency) =>
-      taskIds.has(dependency.task_id) && taskIds.has(dependency.depends_on_task_id)
+  const taskList = rawTasks ?? []
+  const allDeps: TaskDependency[] = deps ?? []
+  const taskIds = new Set(taskList.map((t) => t.id))
+
+  const tasks: TaskWithDependencies[] = taskList.map((t) => ({
+    ...t,
+    dependencies: allDeps.filter(
+      (d) => d.task_id === t.id && taskIds.has(d.depends_on_task_id),
+    ),
+    blocked_by: allDeps.filter(
+      (d) => d.depends_on_task_id === t.id && taskIds.has(d.task_id),
+    ),
+  }))
+
+  const scopedDependencies = allDeps.filter(
+    (d) => taskIds.has(d.task_id) && taskIds.has(d.depends_on_task_id)
   )
 
   return (
@@ -65,7 +77,7 @@ export default async function CalendarPage({
         />
       </div>
 
-      <CalendarView tasks={taskList} />
+      <CalendarView tasks={tasks} />
     </div>
   )
 }

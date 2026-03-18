@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { UploadDropzone } from "@/components/media/upload-dropzone"
+import { UploadModal } from "@/components/media/upload-modal"
 import { PhotoGrid } from "@/components/media/photo-grid"
 import { DocumentTable } from "@/components/media/document-table"
 import { MediaFilterBar } from "@/components/media/media-filter-bar"
@@ -29,14 +29,15 @@ export function MediaPageClient({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Media</h1>
-        <p className="text-muted-foreground">
-          Photos and documents for this build
-        </p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Media</h1>
+          <p className="text-muted-foreground">
+            Photos and documents for this build
+          </p>
+        </div>
+        <UploadModal projectId={projectId} categories={categories} parts={parts} />
       </div>
-
-      <UploadDropzone projectId={projectId} categories={categories} parts={parts} />
 
       <MediaFilterBar
         filter={filter}
